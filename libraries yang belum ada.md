@@ -1,24 +1,3 @@
-# Overview Libraries yang Belum Ada
-
-
-## 3. **App/Libraries/Notification/EmailService.php**
-
-### Connected Files:
-- Controllers: `AuthController`, `ForgotPasswordController`, approval controllers
-- Libraries: `NotificationService`
-- Views: `emails/*` templates
-
-### Methods:
-- `send($to, $subject, $message)` - Kirim email basic
-- `sendTemplate($to, $subject, $template, $data)` - Kirim dengan template
-- `sendBulk($recipients, $subject, $message)` - Kirim ke multiple recipients
-- `setFrom($email, $name)` - Set sender info
-- `addAttachment($filepath)` - Attach file ke email
-- `validateEmail($email)` - Validasi format email
-- `queue($to, $subject, $message)` - Queue email untuk dikirim later
-
----
-
 ## 4. **App/Libraries/PDF/PDFGenerator.php**
 
 ### Connected Files:
@@ -90,22 +69,6 @@
 
 ---
 
-## Prioritas Implementasi:
-
-### Priority 1 (Critical):
-1. **FileUploadService** - Dipakai hampir semua upload functionality
-2. **NotificationService** - Core untuk notification system
-3. **PDFGenerator** - Essential untuk generate dokumen
-
-### Priority 2 (Important):
-4. **SPPDPDFTemplate** - Generate SPPD documents
-5. **ActivityLogger** - Audit trail requirement
-6. **EmailService** - Notification via email
-
-### Priority 3 (Optional):
-7. **SPPDGenerator** - Helper untuk generate nomor (bisa manual input dulu)
-
----
 
 ## Notes:
 - Semua library menggunakan **OOP pattern**
