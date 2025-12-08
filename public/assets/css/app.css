@@ -1,0 +1,11 @@
+@import url('tailwind.css');
+
+/* App custom styles (keeps layout stable until additional styles are added) */
+html, body {
+  height: 100%;
+}
+
+/* Small helpers */
+.hidden { display: none !important; }
+
+/* Add any project-specific overrides below */

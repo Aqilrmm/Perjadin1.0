@@ -5,9 +5,19 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= esc($title ?? 'Login - Perjadin') ?></title>
-    <link href="/assets/css/tailwind.css" rel="stylesheet">
-    <script src="/assets/vendors/jquery/jquery.min.js"></script>
-    <script src="/assets/vendors/sweetalert2/sweetalert2.min.js"></script>
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- jQuery CDN (resmi) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+            integrity="sha256-+0xYsi2JxK2NN1JtSPDh8a/mQPEd6G/Jw7P3F6t8N3Q="
+            crossorigin="anonymous"></script>
+
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- auth.js (tetap lokal karena file custom kamu) -->
     <script src="/assets/js/auth.js"></script>
 </head>
 
@@ -15,6 +25,7 @@
     <div class="w-full max-w-md">
         <?= $this->renderSection('content') ?>
     </div>
+
     <?= $this->renderSection('scripts') ?>
 </body>
 
