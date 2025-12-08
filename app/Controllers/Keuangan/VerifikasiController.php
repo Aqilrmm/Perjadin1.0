@@ -42,12 +42,12 @@ class VerifikasiController extends BaseController
         }
 
         $request = $this->request->getPost();
-        
+
         // Filter by submitted status
         if (!isset($request['filters']['status'])) {
             $request['filters']['status'] = 'submitted';
         }
-        
+
         $data = $this->sppdModel->getDatatablesData($request);
 
         // Format data for display
@@ -74,7 +74,7 @@ class VerifikasiController extends BaseController
 
         // Get LPPD
         $lppd = $this->lppdModel->getBySppd($id);
-        
+
         // Get Kwitansi
         $kwitansi = $this->kwitansiModel->getBySppd($id);
 
@@ -111,7 +111,7 @@ class VerifikasiController extends BaseController
 
         // Validate checklist
         $checklist = $this->request->getPost('checklist');
-        
+
         if (!$checklist) {
             return $this->respondError('Checklist verifikasi harus diisi', null, 422);
         }
@@ -138,7 +138,7 @@ class VerifikasiController extends BaseController
             // Send notification to pegawai
             $sppdPegawaiModel = new \App\Models\SPPD\SPPDPegawaiModel();
             $pegawaiIds = $sppdPegawaiModel->getPegawaiIds($id);
-            
+
             foreach ($pegawaiIds as $pegawaiId) {
                 notify_sppd_verified($id, $pegawaiId);
             }
@@ -164,13 +164,21 @@ class VerifikasiController extends BaseController
             return $this->respondError('Hanya SPPD dengan status submitted yang dapat ditolak', null, 400);
         }
 
-        $rules = [
-            'catatan_penolakan' => 'required|min_length[20]',
-        ];
+        // Use central catatan rule but enforce min_length[20] for verification rejections
+        $group = config('Validation')->rules['catatan'] ?? ['catatan' => 'required|min_length[10]'];
+        $rule = $group['catatan'];
+        // ensure min_length[20]
+        if (preg_match('/min_length\[\d+\]/', $rule)) {
+            $rule = preg_replace('/min_length\[\d+\]/', 'min_length[20]', $rule);
+        } else {
+            $rule .= '|min_length[20]';
+        }
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Catatan penolakan wajib diisi minimal 20 karakter', $errors, 422);
+        $rules = ['catatan_penolakan' => $rule];
+
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Catatan penolakan wajib diisi minimal 20 karakter', $this->getValidationErrors(), 422);
         }
 
         $catatan = $this->request->getPost('catatan_penolakan');
@@ -204,13 +212,12 @@ class VerifikasiController extends BaseController
             // Send notification to pegawai
             $sppdPegawaiModel = new \App\Models\SPPD\SPPDPegawaiModel();
             $pegawaiIds = $sppdPegawaiModel->getPegawaiIds($id);
-            
+
             foreach ($pegawaiIds as $pegawaiId) {
                 notify_sppd_need_revision($id, $pegawaiId, $catatan);
             }
 
             return $this->respondSuccess('SPPD dikembalikan untuk revisi');
-
         } catch (\Exception $e) {
             $db->transRollback();
             return $this->respondError($e->getMessage(), null, 500);
@@ -223,8 +230,8 @@ class VerifikasiController extends BaseController
     public function getPendingCount()
     {
         $count = $this->sppdModel->where('status', 'submitted')
-                                  ->where('deleted_at', null)
-                                  ->countAllResults();
+            ->where('deleted_at', null)
+            ->countAllResults();
 
         return $this->respondSuccess('Pending count', ['count' => $count]);
     }
@@ -235,22 +242,22 @@ class VerifikasiController extends BaseController
     private function getActionButtons($sppdId, $status)
     {
         $buttons = '<div class="flex gap-2">';
-        
+
         if ($status == 'submitted') {
-            $buttons .= '<button class="btn-verify text-blue-600 hover:text-blue-800" data-id="'.$sppdId.'" title="Verifikasi">
+            $buttons .= '<button class="btn-verify text-blue-600 hover:text-blue-800" data-id="' . $sppdId . '" title="Verifikasi">
                             <i class="fas fa-check-circle"></i>
                         </button>';
-            $buttons .= '<button class="btn-reject text-red-600 hover:text-red-800" data-id="'.$sppdId.'" title="Return">
+            $buttons .= '<button class="btn-reject text-red-600 hover:text-red-800" data-id="' . $sppdId . '" title="Return">
                             <i class="fas fa-undo"></i>
                         </button>';
         }
-        
-        $buttons .= '<button class="btn-detail text-purple-600 hover:text-purple-800" data-id="'.$sppdId.'" title="Detail">
+
+        $buttons .= '<button class="btn-detail text-purple-600 hover:text-purple-800" data-id="' . $sppdId . '" title="Detail">
                         <i class="fas fa-eye"></i>
                     </button>';
-        
+
         $buttons .= '</div>';
-        
+
         return $buttons;
     }
 }

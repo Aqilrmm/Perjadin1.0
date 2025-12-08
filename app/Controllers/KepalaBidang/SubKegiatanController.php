@@ -48,21 +48,22 @@ class SubKegiatanController extends BaseController
 
     public function create()
     {
-        $rules = [
-            'kegiatan_id' => 'required|numeric',
-            'kode_sub_kegiatan' => 'required|is_unique[sub_kegiatan.kode_sub_kegiatan]',
-            'nama_sub_kegiatan' => 'required|min_length[10]',
-            'anggaran_sub_kegiatan' => 'required|numeric|greater_than[0]',
-        ];
+        $rules = config('Validation')->rules['sub_kegiatan'];
+        // For create remove any {id} placeholders present in unique rules
+        foreach ($rules as $k => $r) {
+            if (strpos($r, '{id}') !== false) {
+                $rules[$k] = str_replace(',id,{id}', '', $r);
+            }
+        }
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $kegiatanId = $this->request->getPost('kegiatan_id');
         $anggaran = $this->request->getPost('anggaran_sub_kegiatan');
-        
+
         if (!$this->subKegiatanModel->validateAnggaran($kegiatanId, $anggaran)) {
             return $this->respondError('Anggaran melebihi sisa anggaran kegiatan', null, 422);
         }
@@ -121,13 +122,13 @@ class SubKegiatanController extends BaseController
     private function getActionButtons($id, $status)
     {
         $buttons = '<div class="flex gap-2">';
-        $buttons .= '<button class="btn-view text-blue-600" data-id="'.$id.'"><i class="fas fa-eye"></i></button>';
+        $buttons .= '<button class="btn-view text-blue-600" data-id="' . $id . '"><i class="fas fa-eye"></i></button>';
         if ($status == 'draft') {
-            $buttons .= '<button class="btn-edit text-green-600" data-id="'.$id.'"><i class="fas fa-pencil-alt"></i></button>';
-            $buttons .= '<button class="btn-submit text-purple-600" data-id="'.$id.'"><i class="fas fa-paper-plane"></i></button>';
+            $buttons .= '<button class="btn-edit text-green-600" data-id="' . $id . '"><i class="fas fa-pencil-alt"></i></button>';
+            $buttons .= '<button class="btn-submit text-purple-600" data-id="' . $id . '"><i class="fas fa-paper-plane"></i></button>';
         }
         if (in_array($status, ['draft', 'rejected'])) {
-            $buttons .= '<button class="btn-delete text-red-600" data-id="'.$id.'"><i class="fas fa-trash"></i></button>';
+            $buttons .= '<button class="btn-delete text-red-600" data-id="' . $id . '"><i class="fas fa-trash"></i></button>';
         }
         $buttons .= '</div>';
         return $buttons;

@@ -40,7 +40,7 @@ class BidangController extends BaseController
 
         // Format data for display
         foreach ($data['data'] as $key => $row) {
-            $data['data'][$key]->status_badge = $row->is_active ? 
+            $data['data'][$key]->status_badge = $row->is_active ?
                 '<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Active</span>' :
                 '<span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">Inactive</span>';
             $data['data'][$key]->action = $this->getActionButtons($row->id, $row->is_active);
@@ -72,14 +72,17 @@ class BidangController extends BaseController
      */
     public function create()
     {
-        $rules = [
-            'kode_bidang' => 'required|min_length[2]|max_length[10]|is_unique[bidang.kode_bidang]',
-            'nama_bidang' => 'required|min_length[3]|max_length[255]|is_unique[bidang.nama_bidang]',
-        ];
+        $rules = config('Validation')->rules['bidang'];
+        // For create, remove any {id} placeholder in unique rules
+        foreach ($rules as $k => $r) {
+            if (strpos($r, '{id}') !== false) {
+                $rules[$k] = str_replace(',id,{id}', '', $r);
+            }
+        }
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $data = [
@@ -106,15 +109,15 @@ class BidangController extends BaseController
         if (!$bidang) {
             return $this->respondError('Bidang tidak ditemukan', null, 404);
         }
+        $rules = config('Validation')->rules['bidang'];
+        // Replace placeholder {id}
+        foreach ($rules as $key => $rule) {
+            $rules[$key] = str_replace('{id}', $id, $rule);
+        }
 
-        $rules = [
-            'kode_bidang' => "required|min_length[2]|max_length[10]|is_unique[bidang.kode_bidang,id,{$id}]",
-            'nama_bidang' => "required|min_length[3]|max_length[255]|is_unique[bidang.nama_bidang,id,{$id}]",
-        ];
-
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $data = [
@@ -201,25 +204,25 @@ class BidangController extends BaseController
     private function getActionButtons($bidangId, $isActive)
     {
         $buttons = '<div class="flex gap-2">';
-        $buttons .= '<button class="btn-edit text-blue-600 hover:text-blue-800" data-id="'.$bidangId.'" title="Edit">
+        $buttons .= '<button class="btn-edit text-blue-600 hover:text-blue-800" data-id="' . $bidangId . '" title="Edit">
                         <i class="fas fa-pencil-alt"></i>
                     </button>';
-        $buttons .= '<button class="btn-delete text-red-600 hover:text-red-800" data-id="'.$bidangId.'" title="Delete">
+        $buttons .= '<button class="btn-delete text-red-600 hover:text-red-800" data-id="' . $bidangId . '" title="Delete">
                         <i class="fas fa-trash"></i>
                     </button>';
-        
+
         if ($isActive) {
-            $buttons .= '<button class="btn-deactivate text-orange-600 hover:text-orange-800" data-id="'.$bidangId.'" title="Deactivate">
+            $buttons .= '<button class="btn-deactivate text-orange-600 hover:text-orange-800" data-id="' . $bidangId . '" title="Deactivate">
                             <i class="fas fa-ban"></i>
                         </button>';
         } else {
-            $buttons .= '<button class="btn-activate text-green-600 hover:text-green-800" data-id="'.$bidangId.'" title="Activate">
+            $buttons .= '<button class="btn-activate text-green-600 hover:text-green-800" data-id="' . $bidangId . '" title="Activate">
                             <i class="fas fa-check"></i>
                         </button>';
         }
-        
+
         $buttons .= '</div>';
-        
+
         return $buttons;
     }
 }

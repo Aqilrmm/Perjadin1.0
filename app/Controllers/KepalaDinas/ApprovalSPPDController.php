@@ -66,7 +66,7 @@ class ApprovalSPPDController extends BaseController
         }
 
         // TODO: Generate PDF using mPDF
-        return $this->respondSuccess('Preview generated', ['url' => '/preview/sppd/'.$id]);
+        return $this->respondSuccess('Preview generated', ['url' => '/preview/sppd/' . $id]);
     }
 
     public function approve($id)
@@ -84,19 +84,19 @@ class ApprovalSPPDController extends BaseController
             $bidang = $bidangModel->find($sppd['bidang_id']);
             $bulan = bulan_romawi(date('n'));
             $tahun = date('Y');
-            
+
             // Get last number
             $lastSppd = $this->sppdModel->where('bidang_id', $sppd['bidang_id'])
-                                        ->where('YEAR(created_at)', $tahun)
-                                        ->orderBy('id', 'DESC')
-                                        ->first();
-            
+                ->where('YEAR(created_at)', $tahun)
+                ->orderBy('id', 'DESC')
+                ->first();
+
             $urut = 1;
             if ($lastSppd && $lastSppd['no_sppd']) {
                 $parts = explode('/', $lastSppd['no_sppd']);
                 $urut = intval(end($parts)) + 1;
             }
-            
+
             $noSppd = sprintf('SPPD/%s/%s/%s/%03d', $bidang['kode_bidang'], $bulan, $tahun, $urut);
         }
 
@@ -104,12 +104,12 @@ class ApprovalSPPDController extends BaseController
 
         if ($this->sppdModel->approveSPPD($id, user_id(), $noSppd, $catatan)) {
             $this->logActivity('APPROVE_SPPD', "Approved SPPD: {$noSppd}");
-            
+
             // TODO: Generate Nota Dinas PDF
-            
+
             // Send notification
             notify_sppd_approved($id);
-            
+
             return $this->respondSuccess('SPPD berhasil disetujui', ['no_sppd' => $noSppd]);
         }
 
@@ -123,10 +123,10 @@ class ApprovalSPPDController extends BaseController
             return $this->respondError('Hanya SPPD pending yang dapat ditolak', null, 400);
         }
 
-        $rules = ['catatan' => 'required|min_length[10]'];
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Catatan penolakan wajib diisi minimal 10 karakter', $errors, 422);
+        $rules = config('Validation')->rules['catatan'];
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Catatan penolakan wajib diisi minimal 10 karakter', $this->getValidationErrors(), 422);
         }
 
         $catatan = $this->request->getPost('catatan');
@@ -141,11 +141,11 @@ class ApprovalSPPDController extends BaseController
     private function getActionButtons($id, $status)
     {
         $buttons = '<div class="flex gap-2">';
-        $buttons .= '<button class="btn-detail text-blue-600" data-id="'.$id.'"><i class="fas fa-eye"></i></button>';
-        $buttons .= '<button class="btn-preview text-purple-600" data-id="'.$id.'"><i class="fas fa-file-pdf"></i></button>';
+        $buttons .= '<button class="btn-detail text-blue-600" data-id="' . $id . '"><i class="fas fa-eye"></i></button>';
+        $buttons .= '<button class="btn-preview text-purple-600" data-id="' . $id . '"><i class="fas fa-file-pdf"></i></button>';
         if ($status == 'pending') {
-            $buttons .= '<button class="btn-approve text-green-600" data-id="'.$id.'"><i class="fas fa-check-circle"></i></button>';
-            $buttons .= '<button class="btn-reject text-red-600" data-id="'.$id.'"><i class="fas fa-times-circle"></i></button>';
+            $buttons .= '<button class="btn-approve text-green-600" data-id="' . $id . '"><i class="fas fa-check-circle"></i></button>';
+            $buttons .= '<button class="btn-reject text-red-600" data-id="' . $id . '"><i class="fas fa-times-circle"></i></button>';
         }
         $buttons .= '</div>';
         return $buttons;

@@ -78,10 +78,10 @@ class ApprovalSubKegiatanController extends BaseController
             return $this->respondError('Hanya sub kegiatan pending yang dapat ditolak', null, 400);
         }
 
-        $rules = ['catatan' => 'required|min_length[10]'];
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Catatan penolakan wajib diisi minimal 10 karakter', $errors, 422);
+        $rules = config('Validation')->rules['catatan'];
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Catatan penolakan wajib diisi minimal 10 karakter', $this->getValidationErrors(), 422);
         }
 
         $catatan = $this->request->getPost('catatan');
@@ -96,10 +96,10 @@ class ApprovalSubKegiatanController extends BaseController
     private function getActionButtons($id, $status)
     {
         $buttons = '<div class="flex gap-2">';
-        $buttons .= '<button class="btn-detail text-blue-600" data-id="'.$id.'"><i class="fas fa-eye"></i></button>';
+        $buttons .= '<button class="btn-detail text-blue-600" data-id="' . $id . '"><i class="fas fa-eye"></i></button>';
         if ($status == 'pending') {
-            $buttons .= '<button class="btn-approve text-green-600" data-id="'.$id.'"><i class="fas fa-check-circle"></i></button>';
-            $buttons .= '<button class="btn-reject text-red-600" data-id="'.$id.'"><i class="fas fa-times-circle"></i></button>';
+            $buttons .= '<button class="btn-approve text-green-600" data-id="' . $id . '"><i class="fas fa-check-circle"></i></button>';
+            $buttons .= '<button class="btn-reject text-red-600" data-id="' . $id . '"><i class="fas fa-times-circle"></i></button>';
         }
         $buttons .= '</div>';
         return $buttons;

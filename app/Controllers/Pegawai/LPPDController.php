@@ -61,13 +61,12 @@ class LPPDController extends BaseController
      */
     public function save($sppdId)
     {
-        $rules = [
-            'hasil_kegiatan' => 'required|min_length[50]',
-        ];
+        $group = config('Validation')->rules['lppd'];
+        $rules = array_intersect_key($group, array_flip(['hasil_kegiatan']));
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $lppdData = [
@@ -83,7 +82,7 @@ class LPPDController extends BaseController
         // Handle dokumentasi upload
         $files = $this->request->getFiles();
         $dokumentasi = [];
-        
+
         if (isset($files['dokumentasi'])) {
             foreach ($files['dokumentasi'] as $file) {
                 if ($file->isValid()) {

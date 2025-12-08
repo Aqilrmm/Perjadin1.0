@@ -6,11 +6,6 @@ use App\Controllers\BaseController;
 use App\Models\User\UserModel;
 use App\Models\Log\SecurityLogModel;
 
-/**
- * Forgot Password Controller
- * 
- * Handles password reset functionality
- */
 class ForgotPasswordController extends BaseController
 {
     protected $userModel;
@@ -22,34 +17,27 @@ class ForgotPasswordController extends BaseController
         $this->logModel = new SecurityLogModel();
     }
 
-    /**
-     * Display forgot password page
-     */
     public function index()
     {
         return view('auth/forgot_password');
     }
 
-    /**
-     * Send reset password link
-     */
     public function sendResetLink()
     {
         $rules = [
             'email' => 'required|valid_email',
         ];
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Email tidak valid', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Email tidak valid', $this->getValidationErrors(), 422);
         }
 
         $email = $this->request->getPost('email');
         $user = $this->userModel->where('email', $email)
-                                ->where('deleted_at', null)
-                                ->first();
+            ->where('deleted_at', null)
+            ->first();
 
-        // Always return success to prevent email enumeration
         if (!$user) {
             $this->logModel->logActivity(
                 null,
@@ -62,7 +50,6 @@ class ForgotPasswordController extends BaseController
             return $this->respondSuccess('Jika email terdaftar, link reset password telah dikirim');
         }
 
-        // Check if user is blocked
         if ($user['is_blocked']) {
             $this->logModel->logActivity(
                 $user['id'],
@@ -75,11 +62,9 @@ class ForgotPasswordController extends BaseController
             return $this->respondSuccess('Jika email terdaftar, link reset password telah dikirim');
         }
 
-        // Generate reset token
         $token = bin2hex(random_bytes(32));
         $expiry = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
-        // Store token in database
         $db = \Config\Database::connect();
         $db->table('password_resets')->insert([
             'user_id' => $user['id'],
@@ -89,9 +74,8 @@ class ForgotPasswordController extends BaseController
             'created_at' => date('Y-m-d H:i:s')
         ]);
 
-        // Send email
         $resetLink = base_url("auth/reset-password/{$token}");
-        $this->sendResetEmail($email, $user['nama'], $resetLink);
+        $this->sendResetEmail($email, $user['nama'] ?? $user['email'], $resetLink);
 
         $this->logModel->logActivity(
             $user['id'],
@@ -104,37 +88,25 @@ class ForgotPasswordController extends BaseController
         return $this->respondSuccess('Jika email terdaftar, link reset password telah dikirim');
     }
 
-    /**
-     * Display reset password form
-     */
     public function resetPassword($token)
     {
         $hashedToken = hash('sha256', $token);
-        
         $db = \Config\Database::connect();
         $reset = $db->table('password_resets')
-                    ->where('token', $hashedToken)
-                    ->where('expires_at >', date('Y-m-d H:i:s'))
-                    ->where('used_at', null)
-                    ->get()
-                    ->getRow();
+            ->where('token', $hashedToken)
+            ->where('expires_at >', date('Y-m-d H:i:s'))
+            ->where('used_at', null)
+            ->get()
+            ->getRow();
 
         if (!$reset) {
             return redirect()->to('/auth/forgot-password')
-                           ->with('error', 'Link reset password tidak valid atau sudah kadaluarsa');
+                ->with('error', 'Link reset password tidak valid atau sudah kadaluarsa');
         }
 
-        $data = [
-            'title' => 'Reset Password',
-            'token' => $token
-        ];
-
-        return view('auth/reset_password', $data);
+        return view('auth/reset_password', ['title' => 'Reset Password', 'token' => $token]);
     }
 
-    /**
-     * Process reset password
-     */
     public function processResetPassword()
     {
         $rules = [
@@ -143,9 +115,9 @@ class ForgotPasswordController extends BaseController
             'confirm_password' => 'required|matches[password]',
         ];
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $token = $this->request->getPost('token');
@@ -154,30 +126,26 @@ class ForgotPasswordController extends BaseController
 
         $db = \Config\Database::connect();
         $reset = $db->table('password_resets')
-                    ->where('token', $hashedToken)
-                    ->where('expires_at >', date('Y-m-d H:i:s'))
-                    ->where('used_at', null)
-                    ->get()
-                    ->getRow();
+            ->where('token', $hashedToken)
+            ->where('expires_at >', date('Y-m-d H:i:s'))
+            ->where('used_at', null)
+            ->get()
+            ->getRow();
 
         if (!$reset) {
             return $this->respondError('Link reset password tidak valid atau sudah kadaluarsa', null, 400);
         }
 
-        // Update password
         $this->userModel->update($reset->user_id, [
             'password' => $password,
             'login_attempts' => 0
         ]);
 
-        // Mark token as used
         $db->table('password_resets')
-           ->where('token', $hashedToken)
-           ->update(['used_at' => date('Y-m-d H:i:s')]);
+            ->where('token', $hashedToken)
+            ->update(['used_at' => date('Y-m-d H:i:s')]);
 
-        // Unblock user if blocked
-        $user = $this->userModel->find($reset->user_id);
-        if ($user['is_blocked']) {
+        if ($this->userModel->find($reset->user_id)['is_blocked']) {
             $this->userModel->unblockUser($reset->user_id);
         }
 
@@ -192,9 +160,6 @@ class ForgotPasswordController extends BaseController
         return $this->respondSuccess('Password berhasil direset. Silakan login dengan password baru');
     }
 
-    /**
-     * Send reset email
-     */
     protected function sendResetEmail($email, $name, $resetLink)
     {
         $emailService = \Config\Services::email();
@@ -214,17 +179,14 @@ class ForgotPasswordController extends BaseController
         return $emailService->send();
     }
 
-    /**
-     * Clean expired tokens (can be called via CRON)
-     */
     public function cleanExpiredTokens()
     {
         $db = \Config\Database::connect();
-        
+
         $deleted = $db->table('password_resets')
-                     ->where('expires_at <', date('Y-m-d H:i:s'))
-                     ->orWhere('created_at <', date('Y-m-d H:i:s', strtotime('-7 days')))
-                     ->delete();
+            ->where('expires_at <', date('Y-m-d H:i:s'))
+            ->orWhere('created_at <', date('Y-m-d H:i:s', strtotime('-7 days')))
+            ->delete();
 
         return $this->respondSuccess("Cleaned {$deleted} expired tokens");
     }

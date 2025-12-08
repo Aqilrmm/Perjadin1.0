@@ -52,9 +52,9 @@ class ProfileController extends BaseController
             'email' => "required|valid_email|is_unique[users.email,id,{$userId}]",
         ];
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $data = [
@@ -90,9 +90,9 @@ class ProfileController extends BaseController
             'confirm_password' => 'required|matches[new_password]',
         ];
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $userId = user_id();
@@ -124,9 +124,9 @@ class ProfileController extends BaseController
             'foto' => 'uploaded[foto]|max_size[foto,2048]|is_image[foto]|mime_in[foto,image/jpg,image/jpeg,image/png]',
         ];
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $userId = user_id();
@@ -141,7 +141,7 @@ class ProfileController extends BaseController
             }
 
             $newName = 'profile_' . $userId . '_' . time() . '.' . $foto->getExtension();
-            
+
             // Resize image to 300x300
             $image = \Config\Services::image()
                 ->withFile($foto->getTempName())
@@ -157,7 +157,7 @@ class ProfileController extends BaseController
                 $this->session->set('user_data', $sessionData);
 
                 $this->logActivity('UPDATE_PHOTO', "Updated profile photo");
-                
+
                 return $this->respondSuccess('Foto profil berhasil diupdate', [
                     'foto_url' => base_url('uploads/foto_profile/' . $newName)
                 ]);
@@ -198,7 +198,7 @@ class ProfileController extends BaseController
     public function activityHistory()
     {
         $logModel = new \App\Models\Log\SecurityLogModel();
-        
+
         $limit = $this->request->getGet('limit') ?: 20;
         $page = $this->request->getGet('page') ?: 1;
 

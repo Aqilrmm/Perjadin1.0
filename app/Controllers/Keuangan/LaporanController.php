@@ -31,15 +31,11 @@ class LaporanController extends BaseController
 
     public function generate()
     {
-        $rules = [
-            'periode_start' => 'required|valid_date',
-            'periode_end' => 'required|valid_date',
-            'format' => 'required|in_list[pdf,excel]',
-        ];
+        $rules = config('Validation')->rules['laporan'];
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $periodeStart = $this->request->getPost('periode_start');
@@ -50,14 +46,14 @@ class LaporanController extends BaseController
 
         // Build query
         $builder = $this->sppdModel->select('sppd.*, bidang.nama_bidang, programs.nama_program')
-                                   ->join('bidang', 'bidang.id = sppd.bidang_id')
-                                   ->join('sub_kegiatan', 'sub_kegiatan.id = sppd.sub_kegiatan_id')
-                                   ->join('kegiatan', 'kegiatan.id = sub_kegiatan.kegiatan_id')
-                                   ->join('programs', 'programs.id = kegiatan.program_id')
-                                   ->where('sppd.tanggal_berangkat >=', $periodeStart)
-                                   ->where('sppd.tanggal_berangkat <=', $periodeEnd)
-                                   ->where('sppd.status', $status)
-                                   ->where('sppd.deleted_at', null);
+            ->join('bidang', 'bidang.id = sppd.bidang_id')
+            ->join('sub_kegiatan', 'sub_kegiatan.id = sppd.sub_kegiatan_id')
+            ->join('kegiatan', 'kegiatan.id = sub_kegiatan.kegiatan_id')
+            ->join('programs', 'programs.id = kegiatan.program_id')
+            ->where('sppd.tanggal_berangkat >=', $periodeStart)
+            ->where('sppd.tanggal_berangkat <=', $periodeEnd)
+            ->where('sppd.status', $status)
+            ->where('sppd.deleted_at', null);
 
         if ($bidangIds) {
             $builder->whereIn('sppd.bidang_id', $bidangIds);

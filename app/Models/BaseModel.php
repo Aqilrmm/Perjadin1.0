@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use CodeIgniter\Model;
@@ -121,7 +122,7 @@ class BaseModel extends Model
     {
         $builder = $this->builder();
         $builder->where($field, $value);
-        
+
         if ($exceptId) {
             $builder->where($this->primaryKey . ' !=', $exceptId);
         }
@@ -177,9 +178,9 @@ class BaseModel extends Model
 
         // Get data
         $data = $builder->orderBy($orderColumn, $orderDir)
-                        ->limit($length, $start)
-                        ->get()
-                        ->getResult();
+            ->limit($length, $start)
+            ->get()
+            ->getResult();
 
         return [
             'draw' => intval($draw),
@@ -199,15 +200,6 @@ class BaseModel extends Model
     {
         return $this->insertBatch($data);
     }
-
-    /**
-     * Bulk update
-     *
-     * @param array $data
-     * @return bool
-     */
-    public function bulkUpdate($data)
-    {
-        return $this->updateBatch($data, $this->primaryKey);
-    }
 }
+
+// End of BaseModel

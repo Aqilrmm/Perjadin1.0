@@ -75,6 +75,8 @@ class KwitansiController extends BaseController
             return $this->respondError('SPPD tidak ditemukan', null, 404);
         }
 
+        // Basic numeric checks on biaya fields (handled when building data)
+
         $kwitansiData = [
             'sppd_id' => $sppdId,
             'pegawai_id' => user_id(),
@@ -93,7 +95,7 @@ class KwitansiController extends BaseController
 
         // Handle file uploads
         $fileFields = ['bukti_perjalanan', 'bukti_penginapan', 'bukti_taxi', 'bukti_tiket'];
-        
+
         foreach ($fileFields as $field) {
             $file = $this->request->getFile($field);
             if ($file && $file->isValid()) {
@@ -105,6 +107,15 @@ class KwitansiController extends BaseController
 
         // Calculate total
         $kwitansiData['total_biaya'] = $this->kwitansiModel->calculateTotal($kwitansiData);
+
+        // Validate against model-level rules (sppd_id, pegawai_id, total_biaya)
+        $rules = $this->getModelRules(\App\Models\SPPD\KwitansiModel::class);
+        $validation = \Config\Services::validation();
+        $validation->setRules($rules);
+
+        if (!$validation->run($kwitansiData)) {
+            return $this->respondError('Validasi gagal', $validation->getErrors(), 422);
+        }
 
         // Validate total tidak melebihi estimasi
         if ($kwitansiData['total_biaya'] > $sppd['estimasi_biaya']) {
@@ -181,7 +192,6 @@ class KwitansiController extends BaseController
             notify_sppd_submitted($sppdId);
 
             return $this->respondSuccess('Kwitansi berhasil disubmit. SPPD dikirim ke bagian Keuangan untuk verifikasi');
-
         } catch (\Exception $e) {
             $db->transRollback();
             return $this->respondError($e->getMessage(), null, 500);

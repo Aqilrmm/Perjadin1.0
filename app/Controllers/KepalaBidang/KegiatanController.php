@@ -63,22 +63,23 @@ class KegiatanController extends BaseController
 
     public function create()
     {
-        $rules = [
-            'program_id' => 'required|numeric',
-            'kode_kegiatan' => 'required|is_unique[kegiatan.kode_kegiatan]',
-            'nama_kegiatan' => 'required|min_length[10]',
-            'anggaran_kegiatan' => 'required|numeric|greater_than[0]',
-        ];
+        $rules = config('Validation')->rules['kegiatan'];
+        // For create remove any {id} placeholders present in unique rules
+        foreach ($rules as $k => $r) {
+            if (strpos($r, '{id}') !== false) {
+                $rules[$k] = str_replace(',id,{id}', '', $r);
+            }
+        }
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         // Validate anggaran
         $programId = $this->request->getPost('program_id');
         $anggaranKegiatan = $this->request->getPost('anggaran_kegiatan');
-        
+
         if (!$this->kegiatanModel->validateAnggaran($programId, $anggaranKegiatan)) {
             return $this->respondError('Anggaran kegiatan melebihi sisa anggaran program', null, 422);
         }
@@ -111,15 +112,15 @@ class KegiatanController extends BaseController
             return $this->respondError('Hanya kegiatan draft yang dapat diedit', null, 400);
         }
 
-        $rules = [
-            'kode_kegiatan' => "required|is_unique[kegiatan.kode_kegiatan,id,{$id}]",
-            'nama_kegiatan' => 'required|min_length[10]',
-            'anggaran_kegiatan' => 'required|numeric',
-        ];
+        $rules = config('Validation')->rules['kegiatan'];
+        // Replace placeholder {id}
+        foreach ($rules as $key => $rule) {
+            $rules[$key] = str_replace('{id}', $id, $rule);
+        }
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $anggaranKegiatan = $this->request->getPost('anggaran_kegiatan');
@@ -175,13 +176,13 @@ class KegiatanController extends BaseController
     private function getActionButtons($id, $status)
     {
         $buttons = '<div class="flex gap-2">';
-        $buttons .= '<button class="btn-view text-blue-600" data-id="'.$id.'"><i class="fas fa-eye"></i></button>';
+        $buttons .= '<button class="btn-view text-blue-600" data-id="' . $id . '"><i class="fas fa-eye"></i></button>';
         if ($status == 'draft') {
-            $buttons .= '<button class="btn-edit text-green-600" data-id="'.$id.'"><i class="fas fa-pencil-alt"></i></button>';
-            $buttons .= '<button class="btn-submit text-purple-600" data-id="'.$id.'"><i class="fas fa-paper-plane"></i></button>';
+            $buttons .= '<button class="btn-edit text-green-600" data-id="' . $id . '"><i class="fas fa-pencil-alt"></i></button>';
+            $buttons .= '<button class="btn-submit text-purple-600" data-id="' . $id . '"><i class="fas fa-paper-plane"></i></button>';
         }
         if (in_array($status, ['draft', 'rejected'])) {
-            $buttons .= '<button class="btn-delete text-red-600" data-id="'.$id.'"><i class="fas fa-trash"></i></button>';
+            $buttons .= '<button class="btn-delete text-red-600" data-id="' . $id . '"><i class="fas fa-trash"></i></button>';
         }
         $buttons .= '</div>';
         return $buttons;

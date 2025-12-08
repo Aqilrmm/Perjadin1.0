@@ -79,15 +79,7 @@ class UserController extends BaseController
      */
     public function create()
     {
-        $rules = [
-            'nip_nik' => 'required|min_length[16]|max_length[18]|is_unique[users.nip_nik]',
-            'nama' => 'required|min_length[3]',
-            'jenis_pegawai' => 'required|in_list[ASN,Non-ASN]',
-            'email' => 'required|valid_email|is_unique[users.email]',
-            'password' => 'required|min_length[8]',
-            'jabatan' => 'required',
-            'role' => 'required|in_list[superadmin,kepaladinas,kepalabidang,pegawai,keuangan]',
-        ];
+        $rules = config('Validation')->rules['user_create'];
 
         // Validate bidang_id if not superadmin, kepaladinas, or keuangan
         $role = $this->request->getPost('role');
@@ -95,13 +87,13 @@ class UserController extends BaseController
             $rules['bidang_id'] = 'required|numeric';
         }
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $data = [
-            'uuid' => $this->userModel->generateUUID(),
+            'uuid' => $this->userModel->generateUUIDD(),
             'nip_nik' => $this->request->getPost('nip_nik'),
             'gelar_depan' => $this->request->getPost('gelar_depan'),
             'nama' => $this->request->getPost('nama'),
@@ -141,22 +133,21 @@ class UserController extends BaseController
             return $this->respondError('User tidak ditemukan', null, 404);
         }
 
-        $rules = [
-            'nip_nik' => "required|min_length[16]|max_length[18]|is_unique[users.nip_nik,id,{$id}]",
-            'nama' => 'required|min_length[3]',
-            'email' => "required|valid_email|is_unique[users.email,id,{$id}]",
-            'jabatan' => 'required',
-            'role' => 'required',
-        ];
+        $rules = config('Validation')->rules['user_update'];
+
+        // Replace placeholder {id} in rules
+        foreach ($rules as $key => $rule) {
+            $rules[$key] = str_replace('{id}', $id, $rule);
+        }
 
         // Password is optional on update
         if ($this->request->getPost('password')) {
             $rules['password'] = 'min_length[8]';
         }
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $data = [
@@ -183,7 +174,7 @@ class UserController extends BaseController
             if ($user['foto'] && file_exists(FCPATH . 'uploads/foto_profile/' . $user['foto'])) {
                 unlink(FCPATH . 'uploads/foto_profile/' . $user['foto']);
             }
-            
+
             $newName = 'profile_' . time() . '.' . $foto->getExtension();
             $foto->move(FCPATH . 'uploads/foto_profile', $newName);
             $data['foto'] = $newName;
@@ -269,25 +260,25 @@ class UserController extends BaseController
     private function getActionButtons($userId, $isBlocked)
     {
         $buttons = '<div class="flex gap-2">';
-        $buttons .= '<button class="btn-edit text-blue-600 hover:text-blue-800" data-id="'.$userId.'" title="Edit">
+        $buttons .= '<button class="btn-edit text-blue-600 hover:text-blue-800" data-id="' . $userId . '" title="Edit">
                         <i class="fas fa-pencil-alt"></i>
                     </button>';
-        $buttons .= '<button class="btn-delete text-red-600 hover:text-red-800" data-id="'.$userId.'" title="Delete">
+        $buttons .= '<button class="btn-delete text-red-600 hover:text-red-800" data-id="' . $userId . '" title="Delete">
                         <i class="fas fa-trash"></i>
                     </button>';
-        
+
         if ($isBlocked) {
-            $buttons .= '<button class="btn-unblock text-green-600 hover:text-green-800" data-id="'.$userId.'" title="Unblock">
+            $buttons .= '<button class="btn-unblock text-green-600 hover:text-green-800" data-id="' . $userId . '" title="Unblock">
                             <i class="fas fa-unlock"></i>
                         </button>';
         } else {
-            $buttons .= '<button class="btn-block text-orange-600 hover:text-orange-800" data-id="'.$userId.'" title="Block">
+            $buttons .= '<button class="btn-block text-orange-600 hover:text-orange-800" data-id="' . $userId . '" title="Block">
                             <i class="fas fa-lock"></i>
                         </button>';
         }
-        
+
         $buttons .= '</div>';
-        
+
         return $buttons;
     }
 }

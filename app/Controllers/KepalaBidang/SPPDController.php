@@ -64,11 +64,11 @@ class SPPDController extends BaseController
         }
 
         $request = $this->request->getPost();
-        
+
         // Filter by current user's bidang and created_by
         $request['filters']['bidang_id'] = user_bidang_id();
         $request['filters']['created_by'] = user_id();
-        
+
         $data = $this->sppdModel->getDatatablesData($request);
 
         // Format data for display
@@ -88,15 +88,12 @@ class SPPDController extends BaseController
      */
     public function validateStep1()
     {
-        $rules = [
-            'program_id' => 'required|numeric',
-            'kegiatan_id' => 'required|numeric',
-            'sub_kegiatan_id' => 'required|numeric',
-        ];
+        $group = config('Validation')->rules['sppd_basic'];
+        $rules = array_intersect_key($group, array_flip(['program_id', 'kegiatan_id', 'sub_kegiatan_id']));
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $subKegiatanId = $this->request->getPost('sub_kegiatan_id');
@@ -125,20 +122,21 @@ class SPPDController extends BaseController
      */
     public function validateStep2()
     {
-        $rules = [
-            'tipe_perjalanan' => 'required',
-            'maksud_perjalanan' => 'required|min_length[20]',
-            'dasar_surat' => 'required',
-            'alat_angkut' => 'required',
-            'tempat_berangkat' => 'required',
-            'tempat_tujuan' => 'required',
-            'tanggal_berangkat' => 'required|valid_date',
-            'lama_perjalanan' => 'required|numeric|greater_than[0]',
-        ];
+        $group = config('Validation')->rules['sppd_basic'];
+        $rules = array_intersect_key($group, array_flip([
+            'tipe_perjalanan',
+            'maksud_perjalanan',
+            'dasar_surat',
+            'alat_angkut',
+            'tempat_berangkat',
+            'tempat_tujuan',
+            'tanggal_berangkat',
+            'lama_perjalanan'
+        ]));
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         // Validate tanggal berangkat (min H+1)
@@ -161,13 +159,12 @@ class SPPDController extends BaseController
      */
     public function validateStep3()
     {
-        $rules = [
-            'pegawai_ids' => 'required',
-        ];
+        $group = config('Validation')->rules['sppd_basic'];
+        $rules = array_intersect_key($group, array_flip(['pegawai_ids']));
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Minimal pilih 1 pegawai', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Minimal pilih 1 pegawai', $this->getValidationErrors(), 422);
         }
 
         $pegawaiIds = $this->request->getPost('pegawai_ids');
@@ -178,7 +175,7 @@ class SPPDController extends BaseController
         $warnings = [];
         foreach ($pegawaiIds as $pegawaiId) {
             $overlaps = $this->sppdModel->checkPegawaiOverlap($pegawaiId, $tanggalBerangkat, $tanggalKembali);
-            
+
             if (!empty($overlaps)) {
                 $pegawai = $this->userModel->find($pegawaiId);
                 $warnings[] = [
@@ -200,14 +197,12 @@ class SPPDController extends BaseController
      */
     public function validateStep4()
     {
-        $rules = [
-            'estimasi_biaya' => 'required|numeric|greater_than[0]',
-            'sub_kegiatan_id' => 'required|numeric',
-        ];
+        $group = config('Validation')->rules['sppd_basic'];
+        $rules = array_intersect_key($group, array_flip(['estimasi_biaya', 'sub_kegiatan_id']));
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $subKegiatanId = $this->request->getPost('sub_kegiatan_id');
@@ -238,26 +233,15 @@ class SPPDController extends BaseController
      */
     public function submit()
     {
-        $rules = [
-            'no_sppd' => 'required|is_unique[sppd.no_sppd]',
-            'sub_kegiatan_id' => 'required|numeric',
-            'tipe_perjalanan' => 'required',
-            'maksud_perjalanan' => 'required|min_length[20]',
-            'dasar_surat' => 'required',
-            'alat_angkut' => 'required',
-            'tempat_berangkat' => 'required',
-            'tempat_tujuan' => 'required',
-            'tanggal_berangkat' => 'required|valid_date',
-            'tanggal_kembali' => 'required|valid_date',
-            'lama_perjalanan' => 'required|numeric',
-            'penanggung_jawab' => 'required|numeric',
-            'estimasi_biaya' => 'required|numeric',
-            'pegawai_ids' => 'required',
-        ];
+        $group = config('Validation')->rules['sppd_basic'];
+        $rules = $group;
+        // augment with fields not present in the group
+        $rules['no_sppd'] = 'required|is_unique[sppd.no_sppd]';
+        $rules['tanggal_kembali'] = 'required|valid_date';
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         // Validate estimasi biaya tidak melebihi sisa anggaran
@@ -325,7 +309,6 @@ class SPPDController extends BaseController
             $message = $saveAsDraft ? 'SPPD berhasil disimpan sebagai draft' : 'SPPD berhasil diajukan';
 
             return $this->respondSuccess($message, ['id' => $sppdId]);
-
         } catch (\Exception $e) {
             $db->transRollback();
             return $this->respondError($e->getMessage(), null, 500);
@@ -366,31 +349,31 @@ class SPPDController extends BaseController
     private function getActionButtons($sppdId, $status)
     {
         $buttons = '<div class="flex gap-2">';
-        
-        $buttons .= '<button class="btn-detail text-blue-600 hover:text-blue-800" data-id="'.$sppdId.'" title="Detail">
+
+        $buttons .= '<button class="btn-detail text-blue-600 hover:text-blue-800" data-id="' . $sppdId . '" title="Detail">
                         <i class="fas fa-eye"></i>
                     </button>';
-        
+
         if ($status == 'draft') {
-            $buttons .= '<button class="btn-edit text-green-600 hover:text-green-800" data-id="'.$sppdId.'" title="Edit">
+            $buttons .= '<button class="btn-edit text-green-600 hover:text-green-800" data-id="' . $sppdId . '" title="Edit">
                             <i class="fas fa-pencil-alt"></i>
                         </button>';
-            $buttons .= '<button class="btn-submit text-purple-600 hover:text-purple-800" data-id="'.$sppdId.'" title="Submit">
+            $buttons .= '<button class="btn-submit text-purple-600 hover:text-purple-800" data-id="' . $sppdId . '" title="Submit">
                             <i class="fas fa-paper-plane"></i>
                         </button>';
-            $buttons .= '<button class="btn-delete text-red-600 hover:text-red-800" data-id="'.$sppdId.'" title="Delete">
+            $buttons .= '<button class="btn-delete text-red-600 hover:text-red-800" data-id="' . $sppdId . '" title="Delete">
                             <i class="fas fa-trash"></i>
                         </button>';
         }
-        
+
         if ($status == 'approved') {
-            $buttons .= '<button class="btn-nota text-purple-600 hover:text-purple-800" data-id="'.$sppdId.'" title="Nota Dinas">
+            $buttons .= '<button class="btn-nota text-purple-600 hover:text-purple-800" data-id="' . $sppdId . '" title="Nota Dinas">
                             <i class="fas fa-file-pdf"></i>
                         </button>';
         }
-        
+
         $buttons .= '</div>';
-        
+
         return $buttons;
     }
 }

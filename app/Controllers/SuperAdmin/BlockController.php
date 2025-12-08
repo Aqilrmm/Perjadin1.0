@@ -36,7 +36,7 @@ class BlockController extends BaseController
         }
 
         $request = $this->request->getPost();
-        
+
         $draw = $request['draw'];
         $start = $request['start'];
         $length = $request['length'];
@@ -46,18 +46,18 @@ class BlockController extends BaseController
         $builder = $this->userModel->select('users.*, 
                                               bidang.nama_bidang, 
                                               blocker.nama as blocked_by_name')
-                                   ->join('bidang', 'bidang.id = users.bidang_id', 'left')
-                                   ->join('users as blocker', 'blocker.id = users.blocked_by', 'left')
-                                   ->where('users.is_blocked', 1)
-                                   ->where('users.deleted_at', null);
+            ->join('bidang', 'bidang.id = users.bidang_id', 'left')
+            ->join('users as blocker', 'blocker.id = users.blocked_by', 'left')
+            ->where('users.is_blocked', 1)
+            ->where('users.deleted_at', null);
 
         // Apply search
         if ($searchValue) {
             $builder->groupStart()
-                    ->like('users.nip_nik', $searchValue)
-                    ->orLike('users.nama', $searchValue)
-                    ->orLike('users.email', $searchValue)
-                    ->groupEnd();
+                ->like('users.nip_nik', $searchValue)
+                ->orLike('users.nama', $searchValue)
+                ->orLike('users.email', $searchValue)
+                ->groupEnd();
         }
 
         // Count filtered records
@@ -66,9 +66,9 @@ class BlockController extends BaseController
 
         // Get data
         $data = $builder->orderBy('users.blocked_at', 'DESC')
-                        ->limit($length, $start)
-                        ->get()
-                        ->getResult();
+            ->limit($length, $start)
+            ->get()
+            ->getResult();
 
         // Format data for display
         foreach ($data as $key => $row) {
@@ -99,10 +99,10 @@ class BlockController extends BaseController
                                           bidang.nama_bidang, 
                                           blocker.nama as blocked_by_name,
                                           blocker.nip_nik as blocked_by_nip')
-                                ->join('bidang', 'bidang.id = users.bidang_id', 'left')
-                                ->join('users as blocker', 'blocker.id = users.blocked_by', 'left')
-                                ->where('users.id', $id)
-                                ->first();
+            ->join('bidang', 'bidang.id = users.bidang_id', 'left')
+            ->join('users as blocker', 'blocker.id = users.blocked_by', 'left')
+            ->where('users.id', $id)
+            ->first();
 
         if (!$user) {
             return $this->respondError('User tidak ditemukan', null, 404);
@@ -123,12 +123,15 @@ class BlockController extends BaseController
      */
     public function block()
     {
+        $rules = $this->getModelRules(\App\Models\User\UserModel::class, 'block');
+
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
+        }
+
         $userId = $this->request->getPost('user_id');
         $reason = $this->request->getPost('reason');
-
-        if (!$userId) {
-            return $this->respondError('User ID required', null, 400);
-        }
 
         $user = $this->userModel->find($userId);
         if (!$user) {
@@ -138,11 +141,6 @@ class BlockController extends BaseController
         // Prevent blocking self
         if ($userId == user_id()) {
             return $this->respondError('Tidak dapat memblokir akun sendiri', null, 400);
-        }
-
-        // Validate reason
-        if (!$reason || strlen($reason) < 10) {
-            return $this->respondError('Alasan blokir wajib diisi minimal 10 karakter', null, 422);
         }
 
         if ($this->userModel->blockUser($userId, $reason, user_id())) {
@@ -211,7 +209,7 @@ class BlockController extends BaseController
 
         foreach ($userIds as $userId) {
             $user = $this->userModel->find($userId);
-            
+
             if (!$user || !$user['is_blocked']) {
                 $failedCount++;
                 continue;
@@ -219,7 +217,7 @@ class BlockController extends BaseController
 
             if ($this->userModel->unblockUser($userId)) {
                 $successCount++;
-                
+
                 // Send notification
                 send_notification(
                     $userId,
@@ -248,16 +246,16 @@ class BlockController extends BaseController
         }
 
         $logModel = new \App\Models\Log\SecurityLogModel();
-        
+
         $history = $logModel->select('security_logs.*, blocker.nama as blocker_name')
-                            ->join('users as blocker', 'blocker.id = security_logs.user_id', 'left')
-                            ->where('security_logs.user_id', $userId)
-                            ->whereIn('security_logs.action', ['BLOCK_USER', 'UNBLOCK_USER', 'AUTO_BLOCKED'])
-                            ->orWhere('security_logs.description LIKE', "%user_id:{$userId}%")
-                            ->orderBy('security_logs.created_at', 'DESC')
-                            ->limit(50)
-                            ->get()
-                            ->getResult();
+            ->join('users as blocker', 'blocker.id = security_logs.user_id', 'left')
+            ->where('security_logs.user_id', $userId)
+            ->whereIn('security_logs.action', ['BLOCK_USER', 'UNBLOCK_USER', 'AUTO_BLOCKED'])
+            ->orWhere('security_logs.description LIKE', "%user_id:{$userId}%")
+            ->orderBy('security_logs.created_at', 'DESC')
+            ->limit(50)
+            ->get()
+            ->getResult();
 
         return $this->respondSuccess('Block history', ['history' => $history]);
     }
@@ -269,29 +267,29 @@ class BlockController extends BaseController
     {
         $totalBlocked = $this->userModel->where('is_blocked', 1)->countAllResults();
         $autoBlocked = $this->userModel->where('is_blocked', 1)
-                                       ->like('blocked_reason', 'Auto-blocked')
-                                       ->countAllResults();
+            ->like('blocked_reason', 'Auto-blocked')
+            ->countAllResults();
         $manualBlocked = $totalBlocked - $autoBlocked;
 
         // Blocked by bidang
         $blockedByBidang = $this->userModel->select('bidang.nama_bidang, COUNT(users.id) as total')
-                                           ->join('bidang', 'bidang.id = users.bidang_id', 'left')
-                                           ->where('users.is_blocked', 1)
-                                           ->groupBy('users.bidang_id')
-                                           ->get()
-                                           ->getResult();
+            ->join('bidang', 'bidang.id = users.bidang_id', 'left')
+            ->where('users.is_blocked', 1)
+            ->groupBy('users.bidang_id')
+            ->get()
+            ->getResult();
 
         // Blocked by role
         $blockedByRole = $this->userModel->select('role, COUNT(*) as total')
-                                         ->where('is_blocked', 1)
-                                         ->groupBy('role')
-                                         ->get()
-                                         ->getResult();
+            ->where('is_blocked', 1)
+            ->groupBy('role')
+            ->get()
+            ->getResult();
 
         // Recent blocks (last 30 days)
         $recentBlocks = $this->userModel->where('is_blocked', 1)
-                                        ->where('blocked_at >=', date('Y-m-d', strtotime('-30 days')))
-                                        ->countAllResults();
+            ->where('blocked_at >=', date('Y-m-d', strtotime('-30 days')))
+            ->countAllResults();
 
         return $this->respondSuccess('Statistics', [
             'total_blocked' => $totalBlocked,
@@ -309,21 +307,21 @@ class BlockController extends BaseController
     protected function getActionButtons($userId)
     {
         $buttons = '<div class="flex gap-2">';
-        
-        $buttons .= '<button class="btn-detail text-blue-600 hover:text-blue-800" data-id="'.$userId.'" title="Detail">
+
+        $buttons .= '<button class="btn-detail text-blue-600 hover:text-blue-800" data-id="' . $userId . '" title="Detail">
                         <i class="fas fa-eye"></i>
                     </button>';
-        
-        $buttons .= '<button class="btn-unblock text-green-600 hover:text-green-800" data-id="'.$userId.'" title="Unblock">
+
+        $buttons .= '<button class="btn-unblock text-green-600 hover:text-green-800" data-id="' . $userId . '" title="Unblock">
                         <i class="fas fa-unlock"></i>
                     </button>';
-        
-        $buttons .= '<button class="btn-history text-purple-600 hover:text-purple-800" data-id="'.$userId.'" title="History">
+
+        $buttons .= '<button class="btn-history text-purple-600 hover:text-purple-800" data-id="' . $userId . '" title="History">
                         <i class="fas fa-history"></i>
                     </button>';
-        
+
         $buttons .= '</div>';
-        
+
         return $buttons;
     }
 }

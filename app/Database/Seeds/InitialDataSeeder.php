@@ -10,19 +10,19 @@ class InitialDataSeeder extends Seeder
     {
         // Insert Bidang
         $this->insertBidang();
-        
+
         // Insert System Settings
         $this->insertSystemSettings();
-        
+
         // Insert Super Admin
         $this->insertSuperAdmin();
     }
-    
+
     private function insertBidang()
     {
         $data = [
             [
-                'uuid' => $this->generateUUID(),
+                'uuid' => $this->generateUUIDD(),
                 'kode_bidang' => 'IT',
                 'nama_bidang' => 'Bidang Teknologi Informasi',
                 'keterangan' => 'Mengelola infrastruktur dan aplikasi teknologi informasi',
@@ -31,7 +31,7 @@ class InitialDataSeeder extends Seeder
                 'updated_at' => date('Y-m-d H:i:s'),
             ],
             [
-                'uuid' => $this->generateUUID(),
+                'uuid' => $this->generateUUIDD(),
                 'kode_bidang' => 'KEU',
                 'nama_bidang' => 'Bidang Keuangan',
                 'keterangan' => 'Mengelola keuangan dan anggaran instansi',
@@ -40,7 +40,7 @@ class InitialDataSeeder extends Seeder
                 'updated_at' => date('Y-m-d H:i:s'),
             ],
             [
-                'uuid' => $this->generateUUID(),
+                'uuid' => $this->generateUUIDD(),
                 'kode_bidang' => 'SDM',
                 'nama_bidang' => 'Bidang Sumber Daya Manusia',
                 'keterangan' => 'Mengelola kepegawaian dan pengembangan SDM',
@@ -49,7 +49,7 @@ class InitialDataSeeder extends Seeder
                 'updated_at' => date('Y-m-d H:i:s'),
             ],
             [
-                'uuid' => $this->generateUUID(),
+                'uuid' => $this->generateUUIDD(),
                 'kode_bidang' => 'PEL',
                 'nama_bidang' => 'Bidang Pelayanan Publik',
                 'keterangan' => 'Mengelola layanan publik dan perizinan',
@@ -58,10 +58,10 @@ class InitialDataSeeder extends Seeder
                 'updated_at' => date('Y-m-d H:i:s'),
             ],
         ];
-        
+
         $this->db->table('bidang')->insertBatch($data);
     }
-    
+
     private function insertSystemSettings()
     {
         $data = [
@@ -126,14 +126,14 @@ class InitialDataSeeder extends Seeder
                 'updated_at' => date('Y-m-d H:i:s'),
             ],
         ];
-        
+
         $this->db->table('system_settings')->insertBatch($data);
     }
-    
+
     private function insertSuperAdmin()
     {
         $data = [
-            'uuid' => $this->generateUUID(),
+            'uuid' => $this->generateUUIDD(),
             'nip_nik' => '199001012020011001',
             'gelar_depan' => null,
             'nama' => 'Super Administrator',
@@ -156,24 +156,27 @@ class InitialDataSeeder extends Seeder
             'updated_at' => date('Y-m-d H:i:s'),
             'deleted_at' => null,
         ];
-        
+
         $this->db->table('users')->insert($data);
-        
+
         echo "Super Admin created:\n";
         echo "NIP/NIK: 199001012020011001\n";
         echo "Email: admin@perjadin.com\n";
         echo "Password: admin123\n";
     }
-    
-    private function generateUUID()
+
+    private function generateUUIDD()
     {
         return sprintf(
             '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
             mt_rand(0, 0xffff),
             mt_rand(0, 0x0fff) | 0x4000,
             mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff)
         );
     }
 }

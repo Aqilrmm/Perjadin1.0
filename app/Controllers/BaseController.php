@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers;
 
 use CodeIgniter\Controller;
@@ -40,6 +41,13 @@ abstract class BaseController extends Controller
      * @var \CodeIgniter\Session\Session
      */
     protected $session;
+
+    /**
+     * Last validation errors
+     *
+     * @var array
+     */
+    protected $validationErrors = [];
 
     /**
      * Constructor.
@@ -99,22 +107,35 @@ abstract class BaseController extends Controller
     }
 
     /**
-     * Validate request data
+     * Validate request data (compatible with CodeIgniter\Controller::validate)
+     * Stores validation errors in `$this->validationErrors` when validation fails.
      *
-     * @param array $rules
+     * @param mixed $rules
      * @param array $messages
-     * @return bool|array
+     * @return bool
      */
-    protected function validate($rules, $messages = [])
+    public function validate($rules, array $messages = []): bool
     {
         $validation = \Config\Services::validation();
         $validation->setRules($rules, $messages);
 
         if (!$validation->withRequest($this->request)->run()) {
-            return $validation->getErrors();
+            $this->validationErrors = $validation->getErrors();
+            return false;
         }
 
+        $this->validationErrors = [];
         return true;
+    }
+
+    /**
+     * Get the last validation errors set by `validate()`
+     *
+     * @return array
+     */
+    protected function getValidationErrors(): array
+    {
+        return $this->validationErrors;
     }
 
     /**
@@ -155,7 +176,7 @@ abstract class BaseController extends Controller
     protected function logActivity($action, $description = null)
     {
         $user = $this->getCurrentUser();
-        
+
         $logModel = new \App\Models\Log\SecurityLogModel();
         $logModel->insert([
             'user_id' => $user['id'] ?? null,
@@ -180,11 +201,17 @@ abstract class BaseController extends Controller
      * Get validation rules from model
      *
      * @param string $modelName
+     * @param string|null $context Optional context name passed to model
      * @return array
      */
-    protected function getModelRules($modelName)
+    protected function getModelRules($modelName, $context = null)
     {
         $model = new $modelName();
-        return $model->getValidationRules();
+        if (method_exists($model, 'getValidationRuless')) {
+            return $model->getValidationRuless($context);
+        }
+
+        // Fallback to property
+        return $model->validationRules ?? [];
     }
 }

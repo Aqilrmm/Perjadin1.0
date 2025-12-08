@@ -5,7 +5,7 @@ namespace App\Validation;
 /**
  * Custom Validation Rules for User
  */
-class UserRules
+class UserRoles
 {
     /**
      * Validate NIP format (18 digits for ASN)
@@ -78,14 +78,14 @@ class UserRules
     {
         $db = \Config\Database::connect();
         $builder = $db->table('users');
-        
+
         // Parse parameters (table.field,ignore_field,ignore_value)
         $params = explode(',', $params);
         $ignoreField = $params[0] ?? 'id';
         $ignoreValue = $params[1] ?? null;
 
         $builder->where('nip_nik', $str);
-        
+
         if ($ignoreValue) {
             $builder->where("{$ignoreField} !=", $ignoreValue);
         }
@@ -106,7 +106,7 @@ class UserRules
     public function valid_role(string $str, string &$error = null): bool
     {
         $validRoles = ['superadmin', 'kepaladinas', 'kepalabidang', 'pegawai', 'keuangan'];
-        
+
         if (!in_array($str, $validRoles)) {
             $error = 'Role tidak valid';
             return false;
@@ -121,7 +121,7 @@ class UserRules
     public function valid_jenis_pegawai(string $str, string &$error = null): bool
     {
         $validTypes = ['ASN', 'Non-ASN'];
-        
+
         if (!in_array($str, $validTypes)) {
             $error = 'Jenis pegawai tidak valid';
             return false;
@@ -137,14 +137,14 @@ class UserRules
     {
         $allowedDomains = explode(',', $domains);
         $emailParts = explode('@', $str);
-        
+
         if (count($emailParts) !== 2) {
             $error = 'Format email tidak valid';
             return false;
         }
 
         $domain = $emailParts[1];
-        
+
         if (!in_array($domain, $allowedDomains)) {
             $error = "Email harus menggunakan domain: " . implode(', ', $allowedDomains);
             return false;
@@ -159,10 +159,10 @@ class UserRules
     public function bidang_required_for_role(string $str, string $params, array $data, string &$error = null): bool
     {
         $role = $data['role'] ?? null;
-        
+
         // Roles that don't require bidang
         $noRequireBidang = ['superadmin', 'kepaladinas', 'keuangan'];
-        
+
         if (in_array($role, $noRequireBidang)) {
             return true;
         }
@@ -184,7 +184,7 @@ class UserRules
         // Cannot block super admin
         $db = \Config\Database::connect();
         $user = $db->table('users')->where('id', $str)->get()->getRow();
-        
+
         if (!$user) {
             $error = 'User tidak ditemukan';
             return false;
@@ -198,7 +198,7 @@ class UserRules
         // Cannot block self
         $session = \Config\Services::session();
         $currentUser = $session->get('user_data');
-        
+
         if ($currentUser && $currentUser['id'] == $str) {
             $error = 'Tidak dapat memblokir akun sendiri';
             return false;

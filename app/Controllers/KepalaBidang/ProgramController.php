@@ -36,10 +36,10 @@ class ProgramController extends BaseController
         }
 
         $request = $this->request->getPost();
-        
+
         // Filter by current user's bidang
         $request['filters']['bidang_id'] = user_bidang_id();
-        
+
         $data = $this->programModel->getDatatablesData($request);
 
         // Format data for display
@@ -81,16 +81,19 @@ class ProgramController extends BaseController
      */
     public function create()
     {
-        $rules = [
-            'kode_program' => 'required|min_length[5]|max_length[50]|is_unique[programs.kode_program]',
-            'nama_program' => 'required|min_length[10]|max_length[255]',
-            'tahun_anggaran' => 'required|numeric',
-            'jumlah_anggaran' => 'required|numeric|greater_than[1000000]',
-        ];
+        $rules = config('Validation')->rules['program'];
+        // bidang_id is set server-side (user_bidang_id), so remove from validation here
+        unset($rules['bidang_id']);
+        // For create, remove any {id} placeholder from unique rules
+        foreach ($rules as $k => $r) {
+            if (strpos($r, '{id}') !== false) {
+                $rules[$k] = str_replace(',id,{id}', '', $r);
+            }
+        }
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $saveAsDraft = $this->request->getPost('save_as_draft') == 'true';
@@ -109,9 +112,9 @@ class ProgramController extends BaseController
 
         if ($this->programModel->insert($data)) {
             $this->logActivity('CREATE_PROGRAM', "Created program: {$data['nama_program']}");
-            
+
             $message = $saveAsDraft ? 'Program berhasil disimpan sebagai draft' : 'Program berhasil diajukan';
-            
+
             return $this->respondSuccess($message, ['id' => $this->programModel->getInsertID()]);
         }
 
@@ -138,15 +141,17 @@ class ProgramController extends BaseController
             return $this->respondError('Hanya program draft yang dapat diedit', null, 400);
         }
 
-        $rules = [
-            'kode_program' => "required|is_unique[programs.kode_program,id,{$id}]",
-            'nama_program' => 'required|min_length[10]',
-            'jumlah_anggaran' => 'required|numeric|greater_than[1000000]',
-        ];
+        $rules = config('Validation')->rules['program'];
+        // Replace placeholder {id}
+        foreach ($rules as $key => $rule) {
+            $rules[$key] = str_replace('{id}', $id, $rule);
+        }
+        // bidang_id is unchanged here
+        unset($rules['bidang_id']);
 
-        $errors = $this->validate($rules);
-        if ($errors !== true) {
-            return $this->respondError('Validasi gagal', $errors, 422);
+        $valid = $this->validate($rules);
+        if ($valid !== true) {
+            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
         }
 
         $data = [
@@ -187,10 +192,10 @@ class ProgramController extends BaseController
 
         if ($this->programModel->submitProgram($id)) {
             $this->logActivity('SUBMIT_PROGRAM', "Submitted program for approval: {$program['nama_program']}");
-            
+
             // Send notification to Kepala Dinas
             // notify_program_submitted($id);
-            
+
             return $this->respondSuccess('Program berhasil diajukan untuk persetujuan');
         }
 
@@ -231,31 +236,31 @@ class ProgramController extends BaseController
     private function getActionButtons($programId, $status)
     {
         $buttons = '<div class="flex gap-2">';
-        
+
         // View button
-        $buttons .= '<button class="btn-view text-blue-600 hover:text-blue-800" data-id="'.$programId.'" title="View">
+        $buttons .= '<button class="btn-view text-blue-600 hover:text-blue-800" data-id="' . $programId . '" title="View">
                         <i class="fas fa-eye"></i>
                     </button>';
-        
+
         // Edit button (only for draft)
         if ($status == 'draft') {
-            $buttons .= '<button class="btn-edit text-green-600 hover:text-green-800" data-id="'.$programId.'" title="Edit">
+            $buttons .= '<button class="btn-edit text-green-600 hover:text-green-800" data-id="' . $programId . '" title="Edit">
                             <i class="fas fa-pencil-alt"></i>
                         </button>';
-            $buttons .= '<button class="btn-submit text-purple-600 hover:text-purple-800" data-id="'.$programId.'" title="Submit">
+            $buttons .= '<button class="btn-submit text-purple-600 hover:text-purple-800" data-id="' . $programId . '" title="Submit">
                             <i class="fas fa-paper-plane"></i>
                         </button>';
         }
-        
+
         // Delete button (only for draft or rejected)
         if (in_array($status, ['draft', 'rejected'])) {
-            $buttons .= '<button class="btn-delete text-red-600 hover:text-red-800" data-id="'.$programId.'" title="Delete">
+            $buttons .= '<button class="btn-delete text-red-600 hover:text-red-800" data-id="' . $programId . '" title="Delete">
                             <i class="fas fa-trash"></i>
                         </button>';
         }
-        
+
         $buttons .= '</div>';
-        
+
         return $buttons;
     }
 }
