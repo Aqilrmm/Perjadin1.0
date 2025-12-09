@@ -344,6 +344,111 @@ class SPPDController extends BaseController
     }
 
     /**
+ * Load step content via AJAX
+ */
+public function loadStep($stepNumber)
+{
+    if (!$this->isAjax()) {
+        return $this->respondError('Invalid request', null, 400);
+    }
+
+    $stepViews = [
+        1 => 'kepalabidang/sppd/steps/step1_program',
+        2 => 'kepalabidang/sppd/steps/step2_detail',
+        3 => 'kepalabidang/sppd/steps/step3_pegawai',
+        4 => 'kepalabidang/sppd/steps/step4_biaya',
+        5 => 'kepalabidang/sppd/steps/step5_review',
+    ];
+
+    if (!isset($stepViews[$stepNumber])) {
+        return $this->respondError('Step tidak ditemukan', null, 404);
+    }
+
+    try {
+        $data = [];
+        
+        if ($stepNumber == 1) {
+            $data['approved_programs'] = $this->programModel
+                ->where('bidang_id', user_bidang_id())
+                ->where('status', 'approved')
+                ->findAll();
+        }
+        
+        if ($stepNumber == 3) {
+            $data['pegawai_list'] = $this->userModel
+                ->where('bidang_id', user_bidang_id())
+                ->where('role', 'pegawai')
+                ->where('is_active', 1)
+                ->findAll();
+        }
+
+        $html = view($stepViews[$stepNumber], $data);
+        
+        return $this->respondSuccess('Step loaded', ['html' => $html]);
+    } catch (\Exception $e) {
+        return $this->respondError('Gagal memuat step: ' . $e->getMessage(), null, 500);
+    }
+}
+
+/**
+ * Dynamic step validation
+ */
+public function validateStepDynamic($stepNumber)
+{
+    if (!$this->isAjax()) {
+        return $this->respondError('Invalid request', null, 400);
+    }
+
+    switch ($stepNumber) {
+        case 1:
+            return $this->validateStep1();
+        case 2:
+            return $this->validateStep2();
+        case 3:
+            return $this->validateStep3();
+        case 4:
+            return $this->validateStep4();
+        default:
+            return $this->respondError('Invalid step number', null, 400);
+    }
+}
+
+/**
+ * Get step info (helper method)
+ */
+private function getStepInfo($stepNumber)
+{
+    $stepInfo = [
+        1 => [
+            'title' => 'Pilih Program & Sub Kegiatan',
+            'description' => 'Pilih program, kegiatan, dan sub kegiatan yang sudah disetujui',
+            'icon' => 'fa-folder-open'
+        ],
+        2 => [
+            'title' => 'Detail Perjalanan',
+            'description' => 'Lengkapi informasi terkait perjalanan dinas',
+            'icon' => 'fa-plane-departure'
+        ],
+        3 => [
+            'title' => 'Pilih Pegawai',
+            'description' => 'Tentukan penanggung jawab dan daftar pegawai',
+            'icon' => 'fa-users'
+        ],
+        4 => [
+            'title' => 'Estimasi Biaya',
+            'description' => 'Input estimasi biaya perjalanan dinas',
+            'icon' => 'fa-money-bill-wave'
+        ],
+        5 => [
+            'title' => 'Review & Submit',
+            'description' => 'Periksa kembali data sebelum submit',
+            'icon' => 'fa-check-circle'
+        ]
+    ];
+
+    return $stepInfo[$stepNumber] ?? null;
+}
+    /**
      * Get action buttons for DataTable
      */
     private function getActionButtons($sppdId, $status)

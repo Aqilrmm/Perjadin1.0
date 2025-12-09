@@ -1,339 +1,365 @@
-<div class="step-container">
-    <h3 class="text-lg font-semibold text-gray-900 mb-1">Pilih Program, Kegiatan & Sub Kegiatan</h3>
-    <p class="text-sm text-gray-600 mb-6">Pilih program, kegiatan, dan sub kegiatan yang sudah disetujui</p>
+<?= $this->extend('layouts/main') ?>
 
-    <form id="step1-form">
-        <?= csrf_field() ?>
-        
-        <div class="space-y-4">
-            <!-- Program -->
+<?= $this->section('content') ?>
+
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Program <span class="text-red-500">*</span>
-                </label>
-                <select name="program_id" id="program-select" class="w-full" required>
-                    <option value="">-- Pilih Program --</option>
-                </select>
-                <p class="text-xs text-gray-500 mt-1">Hanya program yang sudah disetujui yang ditampilkan</p>
+                <h1 class="text-2xl font-bold text-gray-900">Buat SPPD Baru</h1>
+                <p class="text-sm text-gray-600 mt-1">Wizard pembuatan Surat Perintah Perjalanan Dinas</p>
             </div>
+            <a href="<?= base_url('kepalabidang/sppd') ?>" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali
+            </a>
+        </div>
+    </div>
 
-            <!-- Kegiatan -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Kegiatan <span class="text-red-500">*</span>
-                </label>
-                <select name="kegiatan_id" id="kegiatan-select" class="w-full" required disabled>
-                    <option value="">-- Pilih Kegiatan --</option>
-                </select>
-                <p class="text-xs text-gray-500 mt-1">Pilih program terlebih dahulu</p>
-            </div>
-
-            <!-- Sub Kegiatan -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Sub Kegiatan <span class="text-red-500">*</span>
-                </label>
-                <select name="sub_kegiatan_id" id="subkegiatan-select" class="w-full" required disabled>
-                    <option value="">-- Pilih Sub Kegiatan --</option>
-                </select>
-                <p class="text-xs text-gray-500 mt-1">Pilih kegiatan terlebih dahulu</p>
-            </div>
-
-            <!-- Info Anggaran -->
-            <div id="anggaran-info" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-info-circle text-blue-600 text-xl"></i>
+    <!-- Wizard Container -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <!-- Step Progress Indicator -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+            <div class="flex items-center justify-between" id="step-progress">
+                <!-- Step 1 -->
+                <div class="flex items-center step-indicator active" data-step="1">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-white text-blue-600 font-bold shadow-lg step-circle">
+                        <i class="fas fa-folder-open"></i>
                     </div>
-                    <div class="ml-3 flex-1">
-                        <h4 class="text-sm font-semibold text-blue-900 mb-2">Informasi Anggaran</h4>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                            <div>
-                                <span class="text-blue-700 block mb-1">Total Anggaran</span>
-                                <span class="font-bold text-blue-900" id="total-anggaran">Rp 0</span>
-                            </div>
-                            <div>
-                                <span class="text-blue-700 block mb-1">Sudah Terpakai</span>
-                                <span class="font-bold text-blue-900" id="anggaran-terpakai">Rp 0</span>
-                            </div>
-                            <div>
-                                <span class="text-blue-700 block mb-1">Sisa Anggaran</span>
-                                <span class="font-bold text-green-600 text-lg" id="sisa-anggaran">Rp 0</span>
-                            </div>
-                        </div>
-
-                        <div class="mt-3">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-xs text-blue-700">Penggunaan Anggaran</span>
-                                <span class="text-xs font-semibold text-blue-900" id="anggaran-percentage">0%</span>
-                            </div>
-                            <div class="w-full bg-blue-200 rounded-full h-2">
-                                <div id="anggaran-progress" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-                            </div>
-                        </div>
-
-                        <!-- Detail Sub Kegiatan -->
-                        <div class="mt-3 pt-3 border-t border-blue-200">
-                            <div class="grid grid-cols-2 gap-2 text-xs">
-                                <div>
-                                    <span class="text-blue-700">Kode Sub Kegiatan:</span>
-                                    <span class="font-semibold text-blue-900 ml-1" id="kode-subkegiatan">-</span>
-                                </div>
-                                <div>
-                                    <span class="text-blue-700">Status:</span>
-                                    <span class="ml-1" id="status-subkegiatan">
-                                        <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                                            <i class="fas fa-check-circle mr-1"></i>Approved
-                                        </span>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="ml-3 hidden lg:block">
+                        <div class="text-white text-sm font-semibold">Step 1</div>
+                        <div class="text-blue-100 text-xs">Program</div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Warning low budget -->
-            <div id="warning-low-budget" class="hidden bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                <!-- Connector -->
+                <div class="flex-1 h-1 bg-blue-400 mx-2"></div>
+
+                <!-- Step 2 -->
+                <div class="flex items-center step-indicator" data-step="2">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 text-white font-bold step-circle">
+                        <i class="fas fa-plane-departure"></i>
                     </div>
-                    <div class="ml-3">
-                        <h4 class="text-sm font-semibold text-yellow-900">Peringatan Anggaran Rendah</h4>
-                        <p class="text-sm text-yellow-700 mt-1">Sisa anggaran sub kegiatan ini sudah kurang dari 20%. Pastikan estimasi biaya SPPD tidak melebihi sisa anggaran.</p>
+                    <div class="ml-3 hidden lg:block">
+                        <div class="text-blue-100 text-sm font-semibold">Step 2</div>
+                        <div class="text-blue-200 text-xs">Detail</div>
+                    </div>
+                </div>
+
+                <div class="flex-1 h-1 bg-blue-400 mx-2"></div>
+
+                <!-- Step 3 -->
+                <div class="flex items-center step-indicator" data-step="3">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 text-white font-bold step-circle">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="ml-3 hidden lg:block">
+                        <div class="text-blue-100 text-sm font-semibold">Step 3</div>
+                        <div class="text-blue-200 text-xs">Pegawai</div>
+                    </div>
+                </div>
+
+                <div class="flex-1 h-1 bg-blue-400 mx-2"></div>
+
+                <!-- Step 4 -->
+                <div class="flex items-center step-indicator" data-step="4">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 text-white font-bold step-circle">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="ml-3 hidden lg:block">
+                        <div class="text-blue-100 text-sm font-semibold">Step 4</div>
+                        <div class="text-blue-200 text-xs">Biaya</div>
+                    </div>
+                </div>
+
+                <div class="flex-1 h-1 bg-blue-400 mx-2"></div>
+
+                <!-- Step 5 -->
+                <div class="flex items-center step-indicator" data-step="5">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 text-white font-bold step-circle">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="ml-3 hidden lg:block">
+                        <div class="text-blue-100 text-sm font-semibold">Step 5</div>
+                        <div class="text-blue-200 text-xs">Review</div>
                     </div>
                 </div>
             </div>
         </div>
-    </form>
+
+        <!-- Step Content -->
+        <div class="p-8" id="step-content">
+            <div class="flex items-center justify-center py-12">
+                <i class="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
+                <span class="ml-3 text-gray-600">Memuat step...</span>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="bg-gray-50 px-8 py-4 border-t border-gray-200">
+            <div class="flex items-center justify-between">
+                <button type="button" id="btn-previous" class="px-6 py-2.5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <i class="fas fa-chevron-left mr-2"></i>Sebelumnya
+                </button>
+
+                <div class="flex items-center space-x-3">
+                    <button type="button" id="btn-save-draft" class="px-6 py-2.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
+                        <i class="fas fa-save mr-2"></i>Simpan Draft
+                    </button>
+                    <button type="button" id="btn-next" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        Selanjutnya<i class="fas fa-chevron-right ml-2"></i>
+                    </button>
+                    <button type="button" id="btn-submit" class="hidden px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-paper-plane mr-2"></i>Submit SPPD
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
 <script>
 $(document).ready(function() {
-    // Initialize Select2 for Program
-    $('#program-select').select2({
-        placeholder: '-- Pilih Program --',
-        allowClear: true,
-        width: '100%',
-        ajax: {
-            url: '<?= base_url('api/programs/options') ?>',
-            dataType: 'json',
-            delay: 250,
-            data: function(params) {
-                return {
-                    q: params.term,
-                    status: 'approved',
-                    bidang_id: '<?= user_bidang_id() ?>'
-                };
-            },
-            processResults: function(data) {
-                return {
-                    results: data.results || data
-                };
-            },
-            cache: true
-        },
-        minimumInputLength: 0
+    let currentStep = 1;
+    const totalSteps = 5;
+    const formData = {};
+
+    // Load initial step
+    loadStep(1);
+
+    // Navigation handlers
+    $('#btn-next').on('click', function() {
+        validateAndProceed();
     });
 
-    // Initialize Select2 for Kegiatan
-    $('#kegiatan-select').select2({
-        placeholder: '-- Pilih Kegiatan --',
-        allowClear: true,
-        width: '100%',
-        ajax: {
-            url: '<?= base_url('api/kegiatan/options') ?>',
-            dataType: 'json',
-            delay: 250,
-            data: function(params) {
-                return {
-                    q: params.term,
-                    program_id: $('#program-select').val(),
-                    status: 'approved'
-                };
-            },
-            processResults: function(data) {
-                return {
-                    results: data.results || data
-                };
-            },
-            cache: true
-        },
-        minimumInputLength: 0
-    });
-
-    // Initialize Select2 for Sub Kegiatan
-    $('#subkegiatan-select').select2({
-        placeholder: '-- Pilih Sub Kegiatan --',
-        allowClear: true,
-        width: '100%',
-        ajax: {
-            url: '<?= base_url('api/subkegiatan/options') ?>',
-            dataType: 'json',
-            delay: 250,
-            data: function(params) {
-                return {
-                    q: params.term,
-                    kegiatan_id: $('#kegiatan-select').val(),
-                    status: 'approved'
-                };
-            },
-            processResults: function(data) {
-                return {
-                    results: data.results || data
-                };
-            },
-            cache: true
-        },
-        minimumInputLength: 0
-    });
-
-    // Cascade: Program changed
-    $('#program-select').on('change', function() {
-        const programId = $(this).val();
-        
-        // Reset kegiatan & sub kegiatan
-        $('#kegiatan-select').val(null).trigger('change').prop('disabled', !programId);
-        $('#subkegiatan-select').val(null).trigger('change').prop('disabled', true);
-        $('#anggaran-info').addClass('hidden');
-        $('#warning-low-budget').addClass('hidden');
-        
-        if (programId) {
-            $('#kegiatan-select').prop('disabled', false);
+    $('#btn-previous').on('click', function() {
+        if (currentStep > 1) {
+            saveCurrentStepData();
+            loadStep(currentStep - 1);
         }
     });
 
-    // Cascade: Kegiatan changed
-    $('#kegiatan-select').on('change', function() {
-        const kegiatanId = $(this).val();
-        
-        // Reset sub kegiatan
-        $('#subkegiatan-select').val(null).trigger('change').prop('disabled', !kegiatanId);
-        $('#anggaran-info').addClass('hidden');
-        $('#warning-low-budget').addClass('hidden');
-        
-        if (kegiatanId) {
-            $('#subkegiatan-select').prop('disabled', false);
-        }
+    $('#btn-submit').on('click', function() {
+        submitSPPD(false);
     });
 
-    // Sub Kegiatan changed - Load anggaran info
-    $('#subkegiatan-select').on('change', function() {
-        const subKegiatanId = $(this).val();
-        
-        if (!subKegiatanId) {
-            $('#anggaran-info').addClass('hidden');
-            $('#warning-low-budget').addClass('hidden');
-            return;
-        }
+    $('#btn-save-draft').on('click', function() {
+        submitSPPD(true);
+    });
 
+    // Load step content
+    function loadStep(stepNumber) {
+        const $content = $('#step-content');
+        
         // Show loading
-        $('#anggaran-info').removeClass('hidden');
-        $('#total-anggaran, #anggaran-terpakai, #sisa-anggaran').html('<i class="fas fa-spinner fa-spin"></i>');
+        $content.html(`
+            <div class="flex items-center justify-center py-12">
+                <i class="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
+                <span class="ml-3 text-gray-600">Memuat step ${stepNumber}...</span>
+            </div>
+        `);
 
-        // Fetch anggaran data
-        $.post('<?= base_url('kepalabidang/sppd/validate-step1') ?>', {
-            sub_kegiatan_id: subKegiatanId,
-            program_id: $('#program-select').val(),
-            kegiatan_id: $('#kegiatan-select').val()
-        })
-        .done(function(response) {
-            if (response.status && response.data) {
-                const data = response.data;
-                const subKegiatan = data.sub_kegiatan;
-                const sisaAnggaran = data.sisa_anggaran || 0;
-                const totalAnggaran = subKegiatan.anggaran || 0;
-                const terpakaiAnggaran = totalAnggaran - sisaAnggaran;
-                const percentage = totalAnggaran > 0 ? ((terpakaiAnggaran / totalAnggaran) * 100) : 0;
-
-                // Update display
-                $('#total-anggaran').text(formatRupiah(totalAnggaran));
-                $('#anggaran-terpakai').text(formatRupiah(terpakaiAnggaran));
-                $('#sisa-anggaran').text(formatRupiah(sisaAnggaran));
-                $('#anggaran-percentage').text(Math.round(percentage) + '%');
-                $('#anggaran-progress').css('width', percentage + '%');
-                $('#kode-subkegiatan').text(subKegiatan.kode_sub_kegiatan || '-');
-
-                // Show warning if low budget
-                if (percentage > 80) {
-                    $('#warning-low-budget').removeClass('hidden');
-                    $('#anggaran-progress').removeClass('bg-blue-600').addClass('bg-yellow-600');
-                } else if (percentage > 90) {
-                    $('#anggaran-progress').removeClass('bg-blue-600 bg-yellow-600').addClass('bg-red-600');
+        $.ajax({
+            url: `<?= base_url('kepalabidang/sppd/step/') ?>${stepNumber}`,
+            type: 'GET',
+            success: function(response) {
+                if (response.status && response.data.html) {
+                    $content.html(response.data.html);
+                    currentStep = stepNumber;
+                    updateStepIndicator();
+                    updateNavigationButtons();
+                    
+                    // Restore saved data
+                    restoreStepData(stepNumber);
+                    
+                    // Trigger custom event for step loaded
+                    $(document).trigger('stepLoaded', [stepNumber, formData]);
                 } else {
-                    $('#warning-low-budget').addClass('hidden');
-                    $('#anggaran-progress').removeClass('bg-yellow-600 bg-red-600').addClass('bg-blue-600');
+                    showToast('Gagal memuat step', 'error');
                 }
-
-                // Animate progress bar
-                setTimeout(() => {
-                    $('#anggaran-progress').css('width', percentage + '%');
-                }, 100);
-
-            } else {
-                showToast('Gagal memuat informasi anggaran', 'error');
-                $('#anggaran-info').addClass('hidden');
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                showToast(response?.message || 'Gagal memuat step', 'error');
+                $content.html(`
+                    <div class="text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-3"></i>
+                        <p class="text-gray-600">Gagal memuat step. Silakan coba lagi.</p>
+                    </div>
+                `);
             }
-        })
-        .fail(function(xhr) {
-            const response = xhr.responseJSON;
-            showToast(response?.message || 'Gagal memuat informasi anggaran', 'error');
-            $('#anggaran-info').addClass('hidden');
         });
-    });
-
-    // Format Rupiah helper
-    function formatRupiah(amount) {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0
-        }).format(amount);
     }
 
-    // Restore data on step load
-    $(document).on('stepLoaded', function(e, step, data) {
-        if (step === 1 && data.program_id) {
-            setTimeout(() => {
-                if (data.program_id) {
-                    const option = new Option(data.program_text || 'Loading...', data.program_id, true, true);
-                    $('#program-select').append(option).trigger('change');
+    // Validate current step and proceed
+    function validateAndProceed() {
+        saveCurrentStepData();
+
+        $.ajax({
+            url: `<?= base_url('kepalabidang/sppd/validate-step') ?>${currentStep}`,
+            type: 'POST',
+            data: getCurrentStepFormData(),
+            success: function(response) {
+                if (response.status) {
+                    // Save any additional data from validation
+                    if (response.data) {
+                        Object.assign(formData, response.data);
+                    }
+                    
+                    if (currentStep < totalSteps) {
+                        loadStep(currentStep + 1);
+                    }
+                } else {
+                    showToast(response.message || 'Validasi gagal', 'error');
                 }
-                if (data.kegiatan_id) {
-                    const option = new Option(data.kegiatan_text || 'Loading...', data.kegiatan_id, true, true);
-                    $('#kegiatan-select').append(option).trigger('change');
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                showToast(response?.message || 'Validasi gagal', 'error');
+                
+                // Show validation errors if any
+                if (response?.data) {
+                    displayValidationErrors(response.data);
                 }
-                if (data.sub_kegiatan_id) {
-                    const option = new Option(data.sub_kegiatan_text || 'Loading...', data.sub_kegiatan_id, true, true);
-                    $('#subkegiatan-select').append(option).trigger('change');
-                }
-            }, 300);
+            }
+        });
+    }
+
+    // Get current step form data
+    function getCurrentStepFormData() {
+        const formSelector = `#step${currentStep}-form`;
+        const $form = $(formSelector);
+        
+        if ($form.length) {
+            return $form.serialize();
         }
-    });
+        return {};
+    }
+
+    // Save current step data
+    function saveCurrentStepData() {
+        const formSelector = `#step${currentStep}-form`;
+        const $form = $(formSelector);
+        
+        if ($form.length) {
+            const data = $form.serializeArray();
+            data.forEach(item => {
+                formData[item.name] = item.value;
+            });
+        }
+    }
+
+    // Restore step data
+    function restoreStepData(stepNumber) {
+        const formSelector = `#step${stepNumber}-form`;
+        const $form = $(formSelector);
+        
+        if ($form.length) {
+            Object.keys(formData).forEach(key => {
+                const $field = $form.find(`[name="${key}"]`);
+                if ($field.length) {
+                    $field.val(formData[key]);
+                }
+            });
+        }
+    }
+
+    // Update step indicator
+    function updateStepIndicator() {
+        $('.step-indicator').each(function() {
+            const step = $(this).data('step');
+            const $circle = $(this).find('.step-circle');
+            
+            if (step < currentStep) {
+                // Completed step
+                $(this).addClass('completed').removeClass('active');
+                $circle.removeClass('bg-blue-500 bg-white text-white text-blue-600')
+                       .addClass('bg-green-500 text-white');
+                $circle.html('<i class="fas fa-check"></i>');
+            } else if (step === currentStep) {
+                // Current step
+                $(this).addClass('active').removeClass('completed');
+                $circle.removeClass('bg-blue-500 bg-green-500 text-white')
+                       .addClass('bg-white text-blue-600');
+            } else {
+                // Future step
+                $(this).removeClass('active completed');
+                $circle.removeClass('bg-white bg-green-500 text-blue-600')
+                       .addClass('bg-blue-500 text-white');
+            }
+        });
+    }
+
+    // Update navigation buttons
+    function updateNavigationButtons() {
+        // Previous button
+        $('#btn-previous').prop('disabled', currentStep === 1);
+        
+        // Next/Submit button
+        if (currentStep === totalSteps) {
+            $('#btn-next').hide();
+            $('#btn-submit').show();
+        } else {
+            $('#btn-next').show();
+            $('#btn-submit').hide();
+        }
+    }
+
+    // Submit SPPD
+    function submitSPPD(isDraft) {
+        saveCurrentStepData();
+        
+        const submitData = { ...formData };
+        submitData.save_as_draft = isDraft ? 'true' : 'false';
+        
+        // Show loading
+        const $btn = isDraft ? $('#btn-save-draft') : $('#btn-submit');
+        const originalText = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...');
+
+        $.ajax({
+            url: '<?= base_url('kepalabidang/sppd/submit') ?>',
+            type: 'POST',
+            data: submitData,
+            success: function(response) {
+                if (response.status) {
+                    showToast(response.message || 'SPPD berhasil disimpan', 'success');
+                    setTimeout(() => {
+                        window.location.href = '<?= base_url('kepalabidang/sppd') ?>';
+                    }, 1500);
+                } else {
+                    showToast(response.message || 'Gagal menyimpan SPPD', 'error');
+                    $btn.prop('disabled', false).html(originalText);
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                showToast(response?.message || 'Gagal menyimpan SPPD', 'error');
+                $btn.prop('disabled', false).html(originalText);
+            }
+        });
+    }
+
+    // Display validation errors
+    function displayValidationErrors(errors) {
+        Object.keys(errors).forEach(field => {
+            const $field = $(`[name="${field}"]`);
+            if ($field.length) {
+                $field.addClass('border-red-500');
+                $field.after(`<p class="text-xs text-red-500 mt-1">${errors[field]}</p>`);
+            }
+        });
+    }
+
+    // Toast notification helper
+    function showToast(message, type = 'info') {
+        // Implement your toast notification here
+        console.log(`[${type}] ${message}`);
+        alert(message);
+    }
 });
 </script>
-
-<style>
-.select2-container--default .select2-selection--single {
-    height: 42px !important;
-    padding: 6px 12px !important;
-    border: 1px solid #d1d5db !important;
-    border-radius: 0.5rem !important;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__rendered {
-    line-height: 28px !important;
-    color: #374151 !important;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 40px !important;
-}
-
-.select2-dropdown {
-    border: 1px solid #d1d5db !important;
-    border-radius: 0.5rem !important;
-}
-</style>
+<?= $this->endSection() ?>

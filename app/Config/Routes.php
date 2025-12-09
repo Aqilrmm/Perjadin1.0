@@ -124,6 +124,7 @@ $routes->group('kepaladinas', ['filter' => 'auth:kepaladinas'], function ($route
 $routes->group('kepalabidang', ['filter' => 'auth:kepalabidang'], function ($routes) {
     $routes->get('dashboard', 'KepalaBidang\DashboardController::index');
 
+
     // Program Management
     $routes->group('programs', function ($routes) {
         $routes->get('/', 'KepalaBidang\ProgramController::index');
@@ -158,6 +159,9 @@ $routes->group('kepalabidang', ['filter' => 'auth:kepalabidang'], function ($rou
 
     // SPPD Management
     $routes->group('sppd', function ($routes) {
+        $routes->get('step/(:num)', 'KepalaBidang\SPPDController::loadStep/$1');
+        $routes->post('step/(:num)/validate', 'KepalaBidang\SPPDController::validateStepDynamic/$1');
+
         $routes->get('/', 'KepalaBidang\SPPDController::index');
         $routes->get('create', 'KepalaBidang\SPPDController::create');
         $routes->post('datatable', 'KepalaBidang\SPPDController::datatable');
