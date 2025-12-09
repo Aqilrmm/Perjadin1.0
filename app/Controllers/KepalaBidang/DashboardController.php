@@ -24,6 +24,7 @@ class DashboardController extends BaseController
                 'sppd_bulan_ini' => $sppdModel->where('bidang_id', $bidangId)
                                               ->where('MONTH(tanggal_berangkat)', date('m'))
                                               ->countAllResults(),
+                'anggaran_tahun_ini' => $programModel->getAllAnggaranTahunIniByBidang($bidangId, date('Y')),
             ],
         ];
 

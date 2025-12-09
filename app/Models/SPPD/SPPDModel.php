@@ -47,13 +47,13 @@ class SPPDModel extends BaseModel
         'tipe_perjalanan' => 'required',
         'maksud_perjalanan' => 'required|min_length[20]',
         'dasar_surat' => 'required',
-        'alat_angkut' => 'required',
+        'alat_angkut' => 'permit_empty',
         'tempat_berangkat' => 'required',
         'tempat_tujuan' => 'required',
         'tanggal_berangkat' => 'required|valid_date',
         'lama_perjalanan' => 'required|numeric|greater_than[0]',
         'penanggung_jawab' => 'required|numeric',
-        'estimasi_biaya' => 'required|numeric|greater_than[0]',
+        'estimasi_biaya' => 'permit_empty|numeric|greater_than[0]',
     ];
 
     protected $beforeInsert = ['generateUuid'];
@@ -229,11 +229,15 @@ class SPPDModel extends BaseModel
             ->join('sppd_pegawai', 'sppd_pegawai.sppd_id = sppd.id')
             ->where('sppd_pegawai.pegawai_id', $pegawaiId)
             ->where('sppd.deleted_at', null)
-            ->whereNotIn('sppd.status', ['rejected', 'draft'])
-            ->groupStart()
-            ->where('sppd.tanggal_berangkat <=', $tanggalKembali)
-            ->where('sppd.tanggal_kembali >=', $tanggalBerangkat)
-            ->groupEnd();
+            ->whereNotIn('sppd.status', ['rejected', 'draft']);
+
+        // Tambah filter overlap HANYA kalau dua tanggal valid
+        if (!empty($tanggalBerangkat) && !empty($tanggalKembali)) {
+            $builder->groupStart()
+                ->where('sppd.tanggal_berangkat <=', $tanggalKembali)
+                ->where('sppd.tanggal_kembali >=', $tanggalBerangkat)
+                ->groupEnd();
+        }
 
         if ($excludeSppdId) {
             $builder->where('sppd.id !=', $excludeSppdId);
@@ -241,6 +245,7 @@ class SPPDModel extends BaseModel
 
         return $builder->get()->getResult();
     }
+
 
     /**
      * Get statistics

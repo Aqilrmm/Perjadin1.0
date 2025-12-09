@@ -289,4 +289,17 @@ class ProgramModel extends BaseModel
             'data' => $data
         ];
     }
+
+    public function getAllAnggaranTahunIniByBidang($bidangId, $tahun)
+    {
+        $builder = $this->where('bidang_id', $bidangId)
+                        ->where('tahun_anggaran', $tahun);
+
+        $totalAnggaran = $builder->selectSum('jumlah_anggaran')
+                                  ->get()
+                                  ->getRow()
+                                  ->jumlah_anggaran ?? 0;
+
+        return $totalAnggaran;
+    }
 }

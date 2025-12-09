@@ -227,6 +227,11 @@ $routes->group('api', function ($routes) {
     // Public API
     $routes->get('bidang/options', 'API\BidangController::options');
     $routes->get('pegawai/search', 'API\PegawaiController::search');
+    $routes->get('pegawai/list-all', 'API\PegawaiController::listAll');
+    $routes->get('pegawai/get/(:num)', 'API\PegawaiController::get/$1');
+    $routes->post('pegawai/get-multiple', 'API\PegawaiController::getMultiple');
+    $routes->get('pegawai/count-by-bidang', 'API\PegawaiController::countByBidang');
+    $routes->post('pegawai/check-availability', 'API\PegawaiController::checkAvailability');
 
     // File Upload
     $routes->post('upload/file', 'API\FileUploadController::upload');

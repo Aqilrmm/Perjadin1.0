@@ -62,7 +62,7 @@
                 <div class="flex-1 h-1 bg-blue-400 mx-2"></div>
 
                 <!-- Step 4 -->
-                <div class="flex items-center step-indicator" data-step="4">
+                <!-- <div class="flex items-center step-indicator" data-step="4">
                     <div class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 text-white font-bold step-circle">
                         <i class="fas fa-money-bill-wave"></i>
                     </div>
@@ -72,10 +72,10 @@
                     </div>
                 </div>
 
-                <div class="flex-1 h-1 bg-blue-400 mx-2"></div>
+                <div class="flex-1 h-1 bg-blue-400 mx-2"></div> -->
 
                 <!-- Step 5 -->
-                <div class="flex items-center step-indicator" data-step="5">
+                <!-- <div class="flex items-center step-indicator" data-step="5">
                     <div class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 text-white font-bold step-circle">
                         <i class="fas fa-check-circle"></i>
                     </div>
@@ -83,7 +83,7 @@
                         <div class="text-blue-100 text-sm font-semibold">Step 5</div>
                         <div class="text-blue-200 text-xs">Review</div>
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
 
@@ -124,7 +124,7 @@
 <script>
 $(document).ready(function() {
     let currentStep = 1;
-    const totalSteps = 5;
+    const totalSteps = 3;
     const formData = {};
 
     // Load initial step

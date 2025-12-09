@@ -82,38 +82,6 @@
                 </div>
             </div>
 
-            <!-- Alat Angkut -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Alat Angkut <span class="text-red-500">*</span>
-                </label>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-500 transition-all">
-                        <input type="radio" name="alat_angkut" value="Mobil Dinas" class="mr-2" required>
-                        <i class="fas fa-car text-blue-600 mr-2"></i>
-                        <span class="text-sm">Mobil Dinas</span>
-                    </label>
-
-                    <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-500 transition-all">
-                        <input type="radio" name="alat_angkut" value="Mobil Pribadi" class="mr-2" required>
-                        <i class="fas fa-car-side text-blue-600 mr-2"></i>
-                        <span class="text-sm">Mobil Pribadi</span>
-                    </label>
-
-                    <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-500 transition-all">
-                        <input type="radio" name="alat_angkut" value="Pesawat" class="mr-2" required>
-                        <i class="fas fa-plane text-blue-600 mr-2"></i>
-                        <span class="text-sm">Pesawat</span>
-                    </label>
-
-                    <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-500 transition-all">
-                        <input type="radio" name="alat_angkut" value="Kapal/Speedboat" class="mr-2" required>
-                        <i class="fas fa-ship text-blue-600 mr-2"></i>
-                        <span class="text-sm">Kapal/Speedboat</span>
-                    </label>
-                </div>
-            </div>
-
             <!-- Upload Surat Tugas (Optional) -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -260,11 +228,7 @@ $(document).ready(function() {
         return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     }
 
-    // Radio button visual feedback
-    $('input[name="alat_angkut"]').on('change', function() {
-        $('input[name="alat_angkut"]').parent().removeClass('bg-blue-50 border-blue-500');
-        $(this).parent().addClass('bg-blue-50 border-blue-500');
-    });
+    
 
     // Restore data on step load
     $(document).on('stepLoaded', function(e, step, data) {

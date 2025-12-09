@@ -107,6 +107,7 @@ class SPPDController extends BaseController
         if ($subKegiatan['status'] != 'approved') {
             return $this->respondError('Sub kegiatan belum disetujui', null, 400);
         }
+        $totalAnggaran = $subKegiatan['anggaran_sub_kegiatan'];
 
         // Get sisa anggaran
         $sisaAnggaran = $this->subKegiatanModel->getSisaAnggaran($subKegiatanId);
@@ -114,6 +115,7 @@ class SPPDController extends BaseController
         return $this->respondSuccess('Validation passed', [
             'sub_kegiatan' => $subKegiatan,
             'sisa_anggaran' => $sisaAnggaran,
+            'total_anggaran' => $totalAnggaran,
         ]);
     }
 
@@ -127,7 +129,6 @@ class SPPDController extends BaseController
             'tipe_perjalanan',
             'maksud_perjalanan',
             'dasar_surat',
-            'alat_angkut',
             'tempat_berangkat',
             'tempat_tujuan',
             'tanggal_berangkat',
@@ -168,6 +169,12 @@ class SPPDController extends BaseController
         }
 
         $pegawaiIds = $this->request->getPost('pegawai_ids');
+
+        // Jika JSON string → ubah ke array
+        if (is_string($pegawaiIds) && str_starts_with($pegawaiIds, '[')) {
+            $pegawaiIds = json_decode($pegawaiIds, true);
+        }
+
         $tanggalBerangkat = $this->request->getPost('tanggal_berangkat');
         $tanggalKembali = $this->request->getPost('tanggal_kembali');
 
@@ -192,41 +199,41 @@ class SPPDController extends BaseController
         ]);
     }
 
-    /**
-     * Validate Step 4: Estimasi Biaya
-     */
-    public function validateStep4()
-    {
-        $group = config('Validation')->rules['sppd_basic'];
-        $rules = array_intersect_key($group, array_flip(['estimasi_biaya', 'sub_kegiatan_id']));
+    // /**
+    //  * Validate Step 4: Estimasi Biaya
+    //  */
+    // public function validateStep4()
+    // {
+    //     $group = config('Validation')->rules['sppd_basic'];
+    //     $rules = array_intersect_key($group, array_flip(['estimasi_biaya', 'sub_kegiatan_id']));
 
-        $valid = $this->validate($rules);
-        if ($valid !== true) {
-            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
-        }
+    //     $valid = $this->validate($rules);
+    //     if ($valid !== true) {
+    //         return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
+    //     }
 
-        $subKegiatanId = $this->request->getPost('sub_kegiatan_id');
-        $estimasiBiaya = $this->request->getPost('estimasi_biaya');
+    //     $subKegiatanId = $this->request->getPost('sub_kegiatan_id');
+    //     $estimasiBiaya = $this->request->getPost('estimasi_biaya');
 
-        $sisaAnggaran = $this->subKegiatanModel->getSisaAnggaran($subKegiatanId);
+    //     $sisaAnggaran = $this->subKegiatanModel->getSisaAnggaran($subKegiatanId);
 
-        if ($estimasiBiaya > $sisaAnggaran) {
-            return $this->respondError('Estimasi biaya melebihi sisa anggaran sub kegiatan', null, 422);
-        }
+    //     if ($estimasiBiaya > $sisaAnggaran) {
+    //         return $this->respondError('Estimasi biaya melebihi sisa anggaran sub kegiatan', null, 422);
+    //     }
 
-        $percentage = ($estimasiBiaya / $sisaAnggaran) * 100;
-        $warning = null;
+    //     $percentage = ($estimasiBiaya / $sisaAnggaran) * 100;
+    //     $warning = null;
 
-        if ($percentage > 80) {
-            $warning = 'Estimasi biaya > 80% dari sisa anggaran';
-        }
+    //     if ($percentage > 80) {
+    //         $warning = 'Estimasi biaya > 80% dari sisa anggaran';
+    //     }
 
-        return $this->respondSuccess('Validation passed', [
-            'sisa_anggaran' => $sisaAnggaran,
-            'percentage' => $percentage,
-            'warning' => $warning,
-        ]);
-    }
+    //     return $this->respondSuccess('Validation passed', [
+    //         'sisa_anggaran' => $sisaAnggaran,
+    //         'percentage' => $percentage,
+    //         'warning' => $warning,
+    //     ]);
+    // }
 
     /**
      * Submit SPPD
@@ -236,40 +243,40 @@ class SPPDController extends BaseController
         $group = config('Validation')->rules['sppd_basic'];
         $rules = $group;
         // augment with fields not present in the group
-        $rules['no_sppd'] = 'required|is_unique[sppd.no_sppd]';
+        // $rules['no_sppd'] = 'required|is_unique[sppd.no_sppd]';
         $rules['tanggal_kembali'] = 'required|valid_date';
 
-        $valid = $this->validate($rules);
-        if ($valid !== true) {
-            return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
-        }
+        // $valid = $this->validate($rules);
+        // if ($valid !== true) {
+        //     return $this->respondError('Validasi gagal', $this->getValidationErrors(), 422);
+        // }
 
         // Validate estimasi biaya tidak melebihi sisa anggaran
         $subKegiatanId = $this->request->getPost('sub_kegiatan_id');
         $estimasiBiaya = $this->request->getPost('estimasi_biaya');
         $sisaAnggaran = $this->subKegiatanModel->getSisaAnggaran($subKegiatanId);
 
-        if ($estimasiBiaya > $sisaAnggaran) {
-            return $this->respondError('Estimasi biaya melebihi sisa anggaran', null, 422);
-        }
+        // if ($estimasiBiaya > $sisaAnggaran) {
+        //     return $this->respondError('Estimasi biaya melebihi sisa anggaran', null, 422);
+        // }
 
         $saveAsDraft = $this->request->getPost('save_as_draft') == 'true';
 
         $sppdData = [
-            'no_sppd' => strtoupper($this->request->getPost('no_sppd')),
+             'no_sppd' => null,
             'sub_kegiatan_id' => $subKegiatanId,
             'bidang_id' => user_bidang_id(),
             'tipe_perjalanan' => $this->request->getPost('tipe_perjalanan'),
             'maksud_perjalanan' => $this->request->getPost('maksud_perjalanan'),
             'dasar_surat' => $this->request->getPost('dasar_surat'),
-            'alat_angkut' => $this->request->getPost('alat_angkut'),
+            // 'alat_angkut' => $this->request->getPost('alat_angkut'),
             'tempat_berangkat' => $this->request->getPost('tempat_berangkat'),
             'tempat_tujuan' => $this->request->getPost('tempat_tujuan'),
             'tanggal_berangkat' => $this->request->getPost('tanggal_berangkat'),
             'tanggal_kembali' => $this->request->getPost('tanggal_kembali'),
             'lama_perjalanan' => $this->request->getPost('lama_perjalanan'),
             'penanggung_jawab' => $this->request->getPost('penanggung_jawab'),
-            'estimasi_biaya' => $estimasiBiaya,
+            // 'estimasi_biaya' => $estimasiBiaya,
             'status' => $saveAsDraft ? 'draft' : 'pending',
             'submitted_at' => $saveAsDraft ? null : date('Y-m-d H:i:s'),
             'created_by' => user_id(),
@@ -291,13 +298,26 @@ class SPPDController extends BaseController
             $sppdId = $this->sppdModel->insert($sppdData);
 
             if (!$sppdId) {
-                throw new \Exception('Gagal menyimpan SPPD');
+                throw new \Exception('Gagal menyimpan SPPD'. implode(', ', $this->sppdModel->errors()));
             }
 
             // Insert SPPD Pegawai
             $pegawaiIds = $this->request->getPost('pegawai_ids');
-            $this->sppdPegawaiModel->addPegawai($sppdId, $pegawaiIds);
-
+            // request nya seperti ini pegawai_ids	"[4,1]" lakukan perulangan untuk memasukkan ke tabel sppd_pegawai
+            // Jika JSON string → ubah ke array
+            if (is_string($pegawaiIds) && str_starts_with($pegawaiIds, '[')) {
+                $pegawaiIds = json_decode($pegawaiIds, true);
+            }
+            foreach ($pegawaiIds as $pegawaiId) {
+                $sppdPegawaiData = [
+                    'sppd_id' => $sppdId,
+                    'pegawai_id' => $pegawaiId,
+                ];
+                $inserted = $this->sppdPegawaiModel->insert($sppdPegawaiData);
+                if (!$inserted) {
+                    throw new \Exception('Gagal menyimpan pegawai SPPD'. implode(', ', $this->sppdPegawaiModel->errors()));
+                }
+            }
             $db->transComplete();
 
             if ($db->transStatus() === false) {
@@ -344,110 +364,110 @@ class SPPDController extends BaseController
     }
 
     /**
- * Load step content via AJAX
- */
-public function loadStep($stepNumber)
-{
-    if (!$this->isAjax()) {
-        return $this->respondError('Invalid request', null, 400);
-    }
-
-    $stepViews = [
-        1 => 'kepalabidang/sppd/steps/step1_program',
-        2 => 'kepalabidang/sppd/steps/step2_detail',
-        3 => 'kepalabidang/sppd/steps/step3_pegawai',
-        4 => 'kepalabidang/sppd/steps/step4_biaya',
-        5 => 'kepalabidang/sppd/steps/step5_review',
-    ];
-
-    if (!isset($stepViews[$stepNumber])) {
-        return $this->respondError('Step tidak ditemukan', null, 404);
-    }
-
-    try {
-        $data = [];
-        
-        if ($stepNumber == 1) {
-            $data['approved_programs'] = $this->programModel
-                ->where('bidang_id', user_bidang_id())
-                ->where('status', 'approved')
-                ->findAll();
-        }
-        
-        if ($stepNumber == 3) {
-            $data['pegawai_list'] = $this->userModel
-                ->where('bidang_id', user_bidang_id())
-                ->where('role', 'pegawai')
-                ->where('is_active', 1)
-                ->findAll();
+     * Load step content via AJAX
+     */
+    public function loadStep($stepNumber)
+    {
+        if (!$this->isAjax()) {
+            return $this->respondError('Invalid request', null, 400);
         }
 
-        $html = view($stepViews[$stepNumber], $data);
-        
-        return $this->respondSuccess('Step loaded', ['html' => $html]);
-    } catch (\Exception $e) {
-        return $this->respondError('Gagal memuat step: ' . $e->getMessage(), null, 500);
+        $stepViews = [
+            1 => 'kepalabidang/sppd/steps/step1_program',
+            2 => 'kepalabidang/sppd/steps/step2_detail',
+            3 => 'kepalabidang/sppd/steps/step3_pegawai',
+            // 4 => 'kepalabidang/sppd/steps/step4_review',
+            // 5 => 'kepalabidang/sppd/steps/step4_review',
+        ];
+
+        if (!isset($stepViews[$stepNumber])) {
+            return $this->respondError('Step tidak ditemukan', null, 404);
+        }
+
+        try {
+            $data = [];
+
+            if ($stepNumber == 1) {
+                $data['approved_programs'] = $this->programModel
+                    ->where('bidang_id', user_bidang_id())
+                    ->where('status', 'approved')
+                    ->findAll();
+            }
+
+            if ($stepNumber == 3) {
+                $data['pegawai_list'] = $this->userModel
+                    ->where('bidang_id', user_bidang_id())
+                    ->where('role', 'pegawai')
+                    ->where('is_active', 1)
+                    ->findAll();
+            }
+
+            $html = view($stepViews[$stepNumber], $data);
+
+            return $this->respondSuccess('Step loaded', ['html' => $html]);
+        } catch (\Exception $e) {
+            return $this->respondError('Gagal memuat step: ' . $e->getMessage(), null, 500);
+        }
     }
-}
 
-/**
- * Dynamic step validation
- */
-public function validateStepDynamic($stepNumber)
-{
-    if (!$this->isAjax()) {
-        return $this->respondError('Invalid request', null, 400);
+    /**
+     * Dynamic step validation
+     */
+    public function validateStepDynamic($stepNumber)
+    {
+        if (!$this->isAjax()) {
+            return $this->respondError('Invalid request', null, 400);
+        }
+
+        switch ($stepNumber) {
+            case 1:
+                return $this->validateStep1();
+            case 2:
+                return $this->validateStep2();
+            case 3:
+                return $this->validateStep3();
+            // case 4:
+            //     return $this->validateStep4();
+            default:
+                return $this->respondError('Invalid step number', null, 400);
+        }
     }
 
-    switch ($stepNumber) {
-        case 1:
-            return $this->validateStep1();
-        case 2:
-            return $this->validateStep2();
-        case 3:
-            return $this->validateStep3();
-        case 4:
-            return $this->validateStep4();
-        default:
-            return $this->respondError('Invalid step number', null, 400);
+    /**
+     * Get step info (helper method)
+     */
+    private function getStepInfo($stepNumber)
+    {
+        $stepInfo = [
+            1 => [
+                'title' => 'Pilih Program & Sub Kegiatan',
+                'description' => 'Pilih program, kegiatan, dan sub kegiatan yang sudah disetujui',
+                'icon' => 'fa-folder-open'
+            ],
+            2 => [
+                'title' => 'Detail Perjalanan',
+                'description' => 'Lengkapi informasi terkait perjalanan dinas',
+                'icon' => 'fa-plane-departure'
+            ],
+            3 => [
+                'title' => 'Pilih Pegawai',
+                'description' => 'Tentukan penanggung jawab dan daftar pegawai',
+                'icon' => 'fa-users'
+            ],
+            4 => [
+                'title' => 'Estimasi Biaya',
+                'description' => 'Input estimasi biaya perjalanan dinas',
+                'icon' => 'fa-money-bill-wave'
+            ],
+            5 => [
+                'title' => 'Review & Submit',
+                'description' => 'Periksa kembali data sebelum submit',
+                'icon' => 'fa-check-circle'
+            ]
+        ];
+
+        return $stepInfo[$stepNumber] ?? null;
     }
-}
-
-/**
- * Get step info (helper method)
- */
-private function getStepInfo($stepNumber)
-{
-    $stepInfo = [
-        1 => [
-            'title' => 'Pilih Program & Sub Kegiatan',
-            'description' => 'Pilih program, kegiatan, dan sub kegiatan yang sudah disetujui',
-            'icon' => 'fa-folder-open'
-        ],
-        2 => [
-            'title' => 'Detail Perjalanan',
-            'description' => 'Lengkapi informasi terkait perjalanan dinas',
-            'icon' => 'fa-plane-departure'
-        ],
-        3 => [
-            'title' => 'Pilih Pegawai',
-            'description' => 'Tentukan penanggung jawab dan daftar pegawai',
-            'icon' => 'fa-users'
-        ],
-        4 => [
-            'title' => 'Estimasi Biaya',
-            'description' => 'Input estimasi biaya perjalanan dinas',
-            'icon' => 'fa-money-bill-wave'
-        ],
-        5 => [
-            'title' => 'Review & Submit',
-            'description' => 'Periksa kembali data sebelum submit',
-            'icon' => 'fa-check-circle'
-        ]
-    ];
-
-    return $stepInfo[$stepNumber] ?? null;
-}
     /**
      * Get action buttons for DataTable
      */

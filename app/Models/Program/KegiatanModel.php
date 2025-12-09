@@ -276,4 +276,5 @@ class KegiatanModel extends BaseModel
             'data' => $data
         ];
     }
+    
 }

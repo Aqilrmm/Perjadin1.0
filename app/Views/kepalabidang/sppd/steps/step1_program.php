@@ -244,7 +244,7 @@ $(document).ready(function() {
                 const data = response.data;
                 const subKegiatan = data.sub_kegiatan;
                 const sisaAnggaran = data.sisa_anggaran || 0;
-                const totalAnggaran = subKegiatan.anggaran || 0;
+                const totalAnggaran = data.total_anggaran || 0;
                 const terpakaiAnggaran = totalAnggaran - sisaAnggaran;
                 const percentage = totalAnggaran > 0 ? ((terpakaiAnggaran / totalAnggaran) * 100) : 0;
 
