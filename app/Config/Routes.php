@@ -112,6 +112,7 @@ $routes->group('kepaladinas', ['filter' => 'auth:kepaladinas'], function ($route
         $routes->post('datatable', 'KepalaDinas\ApprovalSPPDController::datatable');
         $routes->get('detail/(:num)', 'KepalaDinas\ApprovalSPPDController::detail/$1');
         $routes->get('preview/(:num)', 'KepalaDinas\ApprovalSPPDController::preview/$1');
+        $routes->get('download-nota-dinas/(:num)', 'KepalaDinas\ApprovalSPPDController::downloadNotaDinas/$1');
         $routes->post('approve/(:num)', 'KepalaDinas\ApprovalSPPDController::approve/$1');
         $routes->post('reject/(:num)', 'KepalaDinas\ApprovalSPPDController::reject/$1');
     });

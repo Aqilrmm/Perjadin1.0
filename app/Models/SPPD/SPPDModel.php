@@ -221,6 +221,7 @@ class SPPDModel extends BaseModel
 
     /**
      * Check if pegawai has overlapping SPPD
+     * FIXED: Mengganti whereNotIn dengan where dengan NOT IN manual
      */
     public function checkPegawaiOverlap($pegawaiId, $tanggalBerangkat, $tanggalKembali, $excludeSppdId = null)
     {
@@ -228,8 +229,8 @@ class SPPDModel extends BaseModel
             ->select('sppd.*')
             ->join('sppd_pegawai', 'sppd_pegawai.sppd_id = sppd.id')
             ->where('sppd_pegawai.pegawai_id', $pegawaiId)
-            ->where('sppd.deleted_at', null)
-            ->whereNotIn('sppd.status', ['rejected', 'draft']);
+            ->where('sppd.deleted_at IS NULL')
+            ->where("sppd.status NOT IN ('rejected', 'draft')");
 
         // Tambah filter overlap HANYA kalau dua tanggal valid
         if (!empty($tanggalBerangkat) && !empty($tanggalKembali)) {
@@ -252,7 +253,7 @@ class SPPDModel extends BaseModel
      */
     public function getStatistics($bidangId = null, $tahun = null)
     {
-        $builder = $this->where('deleted_at', null);
+        $builder = $this->where('deleted_at IS NULL');
 
         if ($bidangId) {
             $builder->where('bidang_id', $bidangId);
@@ -265,9 +266,9 @@ class SPPDModel extends BaseModel
         return [
             'total_sppd' => $builder->countAllResults(false),
             'total_anggaran' => $builder->selectSum('estimasi_biaya')->get()->getRow()->estimasi_biaya ?? 0,
-            'pending' => $this->where('status', 'pending')->countAllResults(),
-            'approved' => $this->where('status', 'approved')->countAllResults(),
-            'verified' => $this->where('status', 'verified')->countAllResults(),
+            'pending' => $this->where('status', 'pending')->where('deleted_at IS NULL')->countAllResults(),
+            'approved' => $this->where('status', 'approved')->where('deleted_at IS NULL')->countAllResults(),
+            'verified' => $this->where('status', 'verified')->where('deleted_at IS NULL')->countAllResults(),
         ];
     }
 
@@ -281,7 +282,7 @@ class SPPDModel extends BaseModel
         $length = $request['length'];
         $searchValue = $request['search']['value'] ?? '';
 
-        $totalRecords = $this->countAll();
+        $totalRecords = $this->where('deleted_at IS NULL')->countAllResults();
 
         $builder = $this->builder();
         $builder->select('sppd.*, 
@@ -295,7 +296,7 @@ class SPPDModel extends BaseModel
             ->join('programs', 'programs.id = kegiatan.program_id', 'left')
             ->join('users as penanggung_jawab', 'penanggung_jawab.id = sppd.penanggung_jawab', 'left')
             ->join('sppd_pegawai', 'sppd_pegawai.sppd_id = sppd.id', 'left')
-            ->where('sppd.deleted_at', null)
+            ->where('sppd.deleted_at IS NULL')
             ->groupBy('sppd.id');
 
         if ($searchValue) {
