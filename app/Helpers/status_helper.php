@@ -27,7 +27,8 @@ if (!function_exists('get_status_badge')) {
             'closed' => '<span class="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Selesai</span>',
             'active' => '<span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>',
             'inactive' => '<span class="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>',
-            'blocked' => '<span class="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Blocked</span>'
+            'blocked' => '<span class="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Blocked</span>',
+            'general' => '<span class="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">' . ucfirst($status) . '</span>'
         ];
         
         return $badges[strtolower($status)] ?? '<span class="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">' . ucfirst($status) . '</span>';

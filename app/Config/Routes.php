@@ -21,6 +21,10 @@ $routes->group('auth', function ($routes) {
 // Super Admin Routes
 $routes->group('superadmin', ['filter' => 'auth:superadmin'], function ($routes) {
     $routes->get('dashboard', 'SuperAdmin\DashboardController::index');
+    $routes->get('dashboard/chart-data', 'SuperAdmin\DashboardController::getChartData');
+    $routes->get('dashboard/recent-users', 'SuperAdmin\DashboardController::recentUsers');
+    $routes->get('dashboard/recent-activities', 'SuperAdmin\DashboardController::recentActivities');
+    $routes->get('dashboard/sppd-by-status', 'SuperAdmin\DashboardController::sppdByStatus');
 
     // User Management
     $routes->group('users', function ($routes) {

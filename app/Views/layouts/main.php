@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi Perjadin - Sistem Manajemen Perjalanan Dinas">
     <meta name="csrf-token" content="<?= csrf_hash() ?>">
 
-    <title><?= $title ?? 'Dashboard' ?> - Aplikasi Perjadin</title>
+    <title><?= esc($title ?? 'Dashboard') ?> - Aplikasi Perjadin</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="<?= base_url('assets/images/favicon.ico') ?>">
@@ -18,8 +18,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <!-- Tailwind CSS (local build) -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
@@ -31,16 +32,11 @@
     <!-- Flatpickr -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
-    <!-- Dropzone removed from global includes to avoid blocked CDN loads; load locally when needed -->
-
     <!-- Toastify -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
     <!-- AOS Animation -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?= base_url('assets/css/app.css') ?>">
 
     <style>
         * {
@@ -68,18 +64,23 @@
 
         /* Sidebar Transition */
         #sidebar {
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease;
         }
 
-        /* Main Content Transition */
-        #main-content {
-            transition: margin-left 0.3s ease;
+        /* Loading Spinner */
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
 
-        /* Loading Overlay */
-        .loading-overlay {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(4px);
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            width: 24px;
+            height: 24px;
+            animation: spin 0.6s linear infinite;
         }
 
         /* Card Hover Effect */
@@ -111,30 +112,43 @@
             border: 2px solid #ffffff;
             border-radius: 50%;
             border-top-color: transparent;
-            animation: spinner 0.6s linear infinite;
+            animation: spin 0.6s linear infinite;
         }
 
-        @keyframes spinner {
+        /* Dropdown Animation */
+        .dropdown-menu {
+            transform-origin: top right;
+            animation: dropdownFade 0.2s ease-out;
+        }
+
+        @keyframes dropdownFade {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
             to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* Pulse Animation */
-        @keyframes pulse {
-
-            0%,
-            100% {
                 opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
+                transform: scale(1);
             }
         }
 
-        .animate-pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        /* Modal Backdrop */
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+        }
+
+        /* Select2 Custom Styling */
+        .select2-container--default .select2-selection--single {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            height: 42px;
+            padding: 0.5rem;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 26px;
         }
     </style>
 
@@ -143,31 +157,187 @@
 
 <body class="bg-gray-50 antialiased">
 
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
     <!-- Sidebar -->
-    <?= view('layouts/components/sidebar') ?>
+    <aside id="sidebar" class="fixed top-0 left-0 z-50 w-64 h-screen bg-white border-r border-gray-200 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <!-- Logo -->
+        <div class="flex items-center justify-between h-16 px-6 border-b border-gray-200">
+            <div class="flex items-center gap-3">
+                <img src="<?= base_url('assets/images/logo.png') ?>" alt="Logo" class="h-8 w-8" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2232%22 viewBox=%220 0 24 24%22%3E%3Cpath fill=%22%233b82f6%22 d=%22M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5%22/%3E%3C/svg%3E'">
+                <span class="text-xl font-bold text-gray-800">Perjadin</span>
+            </div>
+            <button onclick="toggleSidebar()" class="lg:hidden text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- User Profile -->
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center gap-3">
+                <img src="<?= get_user_avatar() ?>" alt="Avatar" class="w-12 h-12 rounded-full object-cover" onerror="this.src='<?= base_url('assets/images/default-avatar.png') ?>'">
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 truncate"><?= esc(user_name() ?? 'Guest') ?></p>
+                    <p class="text-xs text-gray-500"><?= esc(get_role_name(user_role() ?? '')) ?></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 overflow-y-auto p-4">
+            <?php
+            $currentUrl = uri_string();
+            $role = user_role();
+
+            // Define menu items based on role
+            $menuItems = [];
+
+            if ($role === 'superadmin') {
+                $menuItems = [
+                    ['icon' => 'fa-home', 'label' => 'Dashboard', 'url' => 'superadmin/dashboard'],
+                    ['icon' => 'fa-users', 'label' => 'Kelola User', 'url' => 'superadmin/users'],
+                    ['icon' => 'fa-building', 'label' => 'Kelola Bidang', 'url' => 'superadmin/bidang'],
+                    ['icon' => 'fa-history', 'label' => 'Security Logs', 'url' => 'superadmin/logs'],
+                    ['icon' => 'fa-ban', 'label' => 'User Diblokir', 'url' => 'superadmin/blocked'],
+                ];
+            } elseif ($role === 'kepaladinas') {
+                $menuItems = [
+                    ['icon' => 'fa-home', 'label' => 'Dashboard', 'url' => 'kepaladinas/dashboard'],
+                    ['icon' => 'fa-tasks', 'label' => 'Approval Program', 'url' => 'kepaladinas/approval/program'],
+                    ['icon' => 'fa-list', 'label' => 'Approval Kegiatan', 'url' => 'kepaladinas/approval/kegiatan'],
+                    ['icon' => 'fa-clipboard-list', 'label' => 'Approval Sub Kegiatan', 'url' => 'kepaladinas/approval/subkegiatan'],
+                    ['icon' => 'fa-plane', 'label' => 'Approval SPPD', 'url' => 'kepaladinas/approval/sppd'],
+                    ['icon' => 'fa-chart-bar', 'label' => 'Analytics', 'url' => 'kepaladinas/analytics'],
+                ];
+            } elseif ($role === 'kepalabidang') {
+                $menuItems = [
+                    ['icon' => 'fa-home', 'label' => 'Dashboard', 'url' => 'kepalabidang/dashboard'],
+                    ['icon' => 'fa-tasks', 'label' => 'Program', 'url' => 'kepalabidang/programs'],
+                    ['icon' => 'fa-list', 'label' => 'Kegiatan', 'url' => 'kepalabidang/kegiatan'],
+                    ['icon' => 'fa-clipboard-list', 'label' => 'Sub Kegiatan', 'url' => 'kepalabidang/subkegiatan'],
+                    ['icon' => 'fa-plane', 'label' => 'SPPD', 'url' => 'kepalabidang/sppd'],
+                    ['icon' => 'fa-chart-line', 'label' => 'Analytics', 'url' => 'kepalabidang/analytics'],
+                ];
+            } elseif ($role === 'pegawai') {
+                $menuItems = [
+                    ['icon' => 'fa-home', 'label' => 'Dashboard', 'url' => 'pegawai/dashboard'],
+                    ['icon' => 'fa-plane', 'label' => 'SPPD Saya', 'url' => 'pegawai/sppd'],
+                ];
+            } elseif ($role === 'keuangan') {
+                $menuItems = [
+                    ['icon' => 'fa-home', 'label' => 'Dashboard', 'url' => 'keuangan/dashboard'],
+                    ['icon' => 'fa-check-circle', 'label' => 'Verifikasi SPPD', 'url' => 'keuangan/verifikasi'],
+                    ['icon' => 'fa-file-alt', 'label' => 'Laporan', 'url' => 'keuangan/laporan'],
+                ];
+            }
+            ?>
+
+            <ul class="space-y-1">
+                <?php foreach ($menuItems as $item): ?>
+                    <?php $isActive = strpos($currentUrl, $item['url']) === 0; ?>
+                    <li>
+                        <a href="<?= base_url($item['url']) ?>" class="flex items-center gap-3 px-4 py-3 text-sm rounded-lg transition-colors <?= $isActive ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-700 hover:bg-gray-100' ?>">
+                            <i class="fas <?= $item['icon'] ?> w-5 text-center"></i>
+                            <span><?= $item['label'] ?></span>
+                        </a>
+                    </li>
+                <?php endforeach; ?>
+
+                <!-- Divider -->
+                <li class="pt-4 mt-4 border-t border-gray-200"></li>
+
+                <!-- Profile Link -->
+                <li>
+                    <a href="<?= base_url('auth/profile') ?>" class="flex items-center gap-3 px-4 py-3 text-sm rounded-lg transition-colors text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-user-circle w-5 text-center"></i>
+                        <span>Profil Saya</span>
+                    </a>
+                </li>
+
+                <!-- Logout -->
+                <li>
+                    <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-4 py-3 text-sm rounded-lg transition-colors text-red-600 hover:bg-red-50">
+                        <i class="fas fa-sign-out-alt w-5 text-center"></i>
+                        <span>Logout</span>
+                    </button>
+                </li>
+            </ul>
+        </nav>
+    </aside>
 
     <!-- Main Content Area -->
-    <div id="main-content" class="lg:ml-64 min-h-screen">
+    <div class="lg:ml-64 min-h-screen flex flex-col">
 
         <!-- Topbar -->
-        <?= view('layouts/components/topbar') ?>
+        <header class="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
+            <div class="flex items-center justify-between px-4 py-3 lg:px-6">
+                <!-- Left Section -->
+                <div class="flex items-center gap-4">
+                    <!-- Mobile Menu Toggle -->
+                    <button onclick="toggleSidebar()" class="lg:hidden text-gray-500 hover:text-gray-700 focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+
+                    <!-- Breadcrumb -->
+                    <nav class="hidden md:flex items-center text-sm text-gray-600">
+                        <span><?= esc($breadcrumb ?? ucfirst(user_role() ?? '')) ?></span>
+                    </nav>
+                </div>
+
+                <!-- Right Section -->
+                <div class="flex items-center gap-3">
+                    <!-- Notifications -->
+                    <div class="relative">
+                        <button id="notif-btn" class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg focus:outline-none">
+                            <i class="fas fa-bell text-lg"></i>
+                            <span id="notif-badge" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full hidden"></span>
+                        </button>
+                    </div>
+
+                    <!-- User Dropdown -->
+                    <div class="relative">
+                        <button id="user-menu-btn" class="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg focus:outline-none">
+                            <img src="<?= get_user_avatar() ?>" alt="Avatar" class="w-8 h-8 rounded-full object-cover" onerror="this.src='<?= base_url('assets/images/default-avatar.png') ?>'">
+                            <span class="hidden md:inline text-sm font-medium text-gray-700"><?= esc(user_name() ?? 'Guest') ?></span>
+                            <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 dropdown-menu">
+                            <div class="py-1">
+                                <a href="<?= base_url('auth/profile') ?>" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-user w-4"></i>
+                                    <span>Profil Saya</span>
+                                </a>
+                                <hr class="my-1">
+                                <button onclick="handleLogout()" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                    <i class="fas fa-sign-out-alt w-4"></i>
+                                    <span>Logout</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
 
         <!-- Page Content -->
-        <main class="p-4 md:p-6 lg:p-8">
+        <main class="flex-1 p-4 md:p-6 lg:p-8">
 
             <!-- Flash Messages -->
             <?php if (session()->getFlashdata('success')): ?>
-                <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow-sm" data-aos="fade-down">
-                    <div class="flex items-center">
+                <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow-sm animate-slide-down" data-aos="fade-down">
+                    <div class="flex items-start">
                         <div class="flex-shrink-0">
                             <i class="fas fa-check-circle text-green-500 text-xl"></i>
                         </div>
-                        <div class="ml-3">
+                        <div class="ml-3 flex-1">
                             <p class="text-sm text-green-800 font-medium">
                                 <?= session()->getFlashdata('success') ?>
                             </p>
                         </div>
-                        <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-green-50 text-green-500 rounded-lg p-1.5 hover:bg-green-100 inline-flex h-8 w-8 items-center justify-center" onclick="this.parentElement.parentElement.remove()">
+                        <button type="button" class="ml-auto flex-shrink-0 text-green-500 hover:text-green-700" onclick="this.parentElement.parentElement.remove()">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -175,17 +345,17 @@
             <?php endif; ?>
 
             <?php if (session()->getFlashdata('error')): ?>
-                <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm" data-aos="fade-down">
-                    <div class="flex items-center">
+                <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm animate-slide-down" data-aos="fade-down">
+                    <div class="flex items-start">
                         <div class="flex-shrink-0">
                             <i class="fas fa-exclamation-circle text-red-500 text-xl"></i>
                         </div>
-                        <div class="ml-3">
+                        <div class="ml-3 flex-1">
                             <p class="text-sm text-red-800 font-medium">
                                 <?= session()->getFlashdata('error') ?>
                             </p>
                         </div>
-                        <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-red-50 text-red-500 rounded-lg p-1.5 hover:bg-red-100 inline-flex h-8 w-8 items-center justify-center" onclick="this.parentElement.parentElement.remove()">
+                        <button type="button" class="ml-auto flex-shrink-0 text-red-500 hover:text-red-700" onclick="this.parentElement.parentElement.remove()">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -193,17 +363,17 @@
             <?php endif; ?>
 
             <?php if (session()->getFlashdata('warning')): ?>
-                <div class="mb-6 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg shadow-sm" data-aos="fade-down">
-                    <div class="flex items-center">
+                <div class="mb-6 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg shadow-sm animate-slide-down" data-aos="fade-down">
+                    <div class="flex items-start">
                         <div class="flex-shrink-0">
                             <i class="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>
                         </div>
-                        <div class="ml-3">
+                        <div class="ml-3 flex-1">
                             <p class="text-sm text-yellow-800 font-medium">
                                 <?= session()->getFlashdata('warning') ?>
                             </p>
                         </div>
-                        <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-yellow-50 text-yellow-500 rounded-lg p-1.5 hover:bg-yellow-100 inline-flex h-8 w-8 items-center justify-center" onclick="this.parentElement.parentElement.remove()">
+                        <button type="button" class="ml-auto flex-shrink-0 text-yellow-500 hover:text-yellow-700" onclick="this.parentElement.parentElement.remove()">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -211,17 +381,17 @@
             <?php endif; ?>
 
             <?php if (session()->getFlashdata('info')): ?>
-                <div class="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg shadow-sm" data-aos="fade-down">
-                    <div class="flex items-center">
+                <div class="mb-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg shadow-sm animate-slide-down" data-aos="fade-down">
+                    <div class="flex items-start">
                         <div class="flex-shrink-0">
                             <i class="fas fa-info-circle text-blue-500 text-xl"></i>
                         </div>
-                        <div class="ml-3">
+                        <div class="ml-3 flex-1">
                             <p class="text-sm text-blue-800 font-medium">
                                 <?= session()->getFlashdata('info') ?>
                             </p>
                         </div>
-                        <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-blue-50 text-blue-500 rounded-lg p-1.5 hover:bg-blue-100 inline-flex h-8 w-8 items-center justify-center" onclick="this.parentElement.parentElement.remove()">
+                        <button type="button" class="ml-auto flex-shrink-0 text-blue-500 hover:text-blue-700" onclick="this.parentElement.parentElement.remove()">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -234,108 +404,88 @@
         </main>
 
         <!-- Footer -->
-        <?= view('layouts/components/footer') ?>
+        <footer class="bg-white border-t border-gray-200 py-4 px-6">
+            <div class="text-center text-sm text-gray-600">
+                &copy; <?= date('Y') ?> Aplikasi Perjadin. All rights reserved.
+            </div>
+        </footer>
 
     </div>
 
-    <!-- Modals -->
-    <?= view('layouts/components/modals/loading_modal') ?>
-    <?= view('layouts/components/modals/confirm_modal') ?>
+    <!-- Loading Modal -->
+    <div id="loading-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+        <div class="bg-white rounded-lg shadow-xl p-6 flex items-center gap-4">
+            <div class="spinner"></div>
+            <span id="loading-message" class="text-gray-700 font-medium">Memproses...</span>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div class="p-6">
+                <h3 id="confirm-title" class="text-lg font-semibold text-gray-900 mb-2">Konfirmasi</h3>
+                <p id="confirm-message" class="text-gray-600 mb-6">Apakah Anda yakin?</p>
+                <div class="flex justify-end gap-3">
+                    <button id="cancel-btn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none">
+                        Batal
+                    </button>
+                    <button id="confirm-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none">
+                        Ya, Lanjutkan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts -->
-    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-    <!-- DataTables -->
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <!-- Select2 -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
-
-    <!-- jQuery Validation -->
-    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
-
-    <!-- Day.js -->
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/locale/id.js"></script>
-
-    <!-- Flatpickr -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
-
-    <!-- Dropzone removed from global includes to avoid blocked CDN loads; load locally when needed -->
-
-    <!-- Lodash -->
-    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
-
-    <!-- Axios -->
     <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-
-    <!-- Cleave.js -->
-    <script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/cleave.min.js"></script>
-
-    <!-- Toastify -->
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-
-    <!-- AOS -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
-    <!-- Custom App JS -->
-    <script src="<?= base_url('assets/js/app.js') ?>"></script>
-
     <script>
-        // Initialize AOS
+        // Initialize
         AOS.init({
-            duration: 800,
-            once: true,
-            offset: 100
+            duration: 600,
+            once: true
         });
 
-        // Set Day.js locale to Indonesian
-        dayjs.locale('id');
+        // CSRF Token Setup
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': csrfToken
+            }
+        });
 
-        // Axios defaults
-        axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-        axios.defaults.headers.common['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').content;
-
-        // Global CSRF token for legacy AJAX
-        window.csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-
-        // Auto-hide flash messages after 5 seconds
-        setTimeout(() => {
-            document.querySelectorAll('[data-aos="fade-down"]').forEach(el => {
-                if (el.classList.contains('bg-green-50') ||
-                    el.classList.contains('bg-red-50') ||
-                    el.classList.contains('bg-yellow-50') ||
-                    el.classList.contains('bg-blue-50')) {
-                    el.style.transition = 'opacity 0.5s ease';
-                    el.style.opacity = '0';
-                    setTimeout(() => el.remove(), 500);
-                }
-            });
-        }, 5000);
-
-        // Sidebar Toggle
+        // Toggle Sidebar
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('main-content');
+            const overlay = document.getElementById('sidebar-overlay');
 
             sidebar.classList.toggle('-translate-x-full');
-            sidebar.classList.toggle('lg:translate-x-0');
+            overlay.classList.toggle('hidden');
         }
+
+        // User Menu Dropdown
+        document.getElementById('user-menu-btn')?.addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('user-menu').classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', function() {
+            document.getElementById('user-menu')?.classList.add('hidden');
+        });
 
         // Loading Modal
         function showLoading(message = 'Memproses...') {
@@ -348,30 +498,35 @@
         }
 
         // Confirm Modal
-        function showConfirm(options) {
+        function showConfirm(options = {}) {
             return new Promise((resolve) => {
                 const modal = document.getElementById('confirm-modal');
-                const title = document.getElementById('confirm-title');
-                const message = document.getElementById('confirm-message');
-                const confirmBtn = document.getElementById('confirm-btn');
-                const cancelBtn = document.getElementById('cancel-btn');
-
-                title.textContent = options.title || 'Konfirmasi';
-                message.textContent = options.message || 'Apakah Anda yakin?';
-                confirmBtn.textContent = options.confirmText || 'Ya';
-                cancelBtn.textContent = options.cancelText || 'Batal';
+                document.getElementById('confirm-title').textContent = options.title || 'Konfirmasi';
+                document.getElementById('confirm-message').textContent = options.message || 'Apakah Anda yakin?';
+                document.getElementById('confirm-btn').textContent = options.confirmText || 'Ya, Lanjutkan';
+                document.getElementById('cancel-btn').textContent = options.cancelText || 'Batal';
 
                 modal.classList.remove('hidden');
 
-                confirmBtn.onclick = () => {
+                const handleConfirm = () => {
                     modal.classList.add('hidden');
+                    cleanup();
                     resolve(true);
                 };
 
-                cancelBtn.onclick = () => {
+                const handleCancel = () => {
                     modal.classList.add('hidden');
+                    cleanup();
                     resolve(false);
                 };
+
+                const cleanup = () => {
+                    document.getElementById('confirm-btn').removeEventListener('click', handleConfirm);
+                    document.getElementById('cancel-btn').removeEventListener('click', handleCancel);
+                };
+
+                document.getElementById('confirm-btn').addEventListener('click', handleConfirm);
+                document.getElementById('cancel-btn').addEventListener('click', handleCancel);
             });
         }
 
@@ -393,12 +548,26 @@
                 style: {
                     background: backgrounds[type] || backgrounds.success,
                     borderRadius: "8px",
-                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)"
+                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
                 }
             }).showToast();
         }
 
-        // Format Currency (Rupiah)
+        // Handle Logout
+        async function handleLogout() {
+            const confirmed = await showConfirm({
+                title: 'Logout',
+                message: 'Apakah Anda yakin ingin keluar?',
+                confirmText: 'Ya, Logout'
+            });
+
+            if (confirmed) {
+                showLoading('Logging out...');
+                window.location.href = '<?= base_url('auth/logout') ?>';
+            }
+        }
+
+        // Format Rupiah
         function formatRupiah(amount) {
             return new Intl.NumberFormat('id-ID', {
                 style: 'currency',
@@ -407,24 +576,14 @@
             }).format(amount);
         }
 
-        // Format Date (Indonesian)
-        function formatDate(date, withDay = true) {
-            const d = dayjs(date);
-            if (withDay) {
-                return d.format('dddd, D MMMM YYYY');
-            }
-            return d.format('D MMMM YYYY');
-        }
-
-        // Format DateTime (Indonesian)
-        function formatDateTime(datetime) {
-            return dayjs(datetime).format('D MMMM YYYY HH:mm') + ' WIB';
-        }
-
-        // Time Ago
-        function timeAgo(datetime) {
-            return dayjs(datetime).fromNow();
-        }
+        // Auto-hide flash messages
+        setTimeout(() => {
+            document.querySelectorAll('.animate-slide-down').forEach(el => {
+                el.style.transition = 'opacity 0.5s ease';
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 500);
+            });
+        }, 5000);
     </script>
 
     <?= $this->renderSection('scripts') ?>
