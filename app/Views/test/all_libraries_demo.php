@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,9 +26,12 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
     </style>
 </head>
+
 <body class="bg-gray-50 p-8">
     <h1 class="text-3xl font-bold mb-6">Demo Semua Library Perjadin</h1>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -41,11 +45,20 @@
             </select>
             <table id="demo-table" class="display mt-4" style="width:100%">
                 <thead>
-                    <tr><th>Nama</th><th>Role</th></tr>
+                    <tr>
+                        <th>Nama</th>
+                        <th>Role</th>
+                    </tr>
                 </thead>
                 <tbody>
-                    <tr><td>Aqil</td><td>Super Admin</td></tr>
-                    <tr><td>Budi</td><td>Pegawai</td></tr>
+                    <tr>
+                        <td>Aqil</td>
+                        <td>Super Admin</td>
+                    </tr>
+                    <tr>
+                        <td>Budi</td>
+                        <td>Pegawai</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -109,7 +122,9 @@
             $('#demo-select2').select2();
         });
         // Flatpickr
-        flatpickr('#demo-date', {dateFormat: 'd-m-Y'});
+        flatpickr('#demo-date', {
+            dateFormat: 'd-m-Y'
+        });
         // Cleave.js
         new Cleave('#demo-rupiah', {
             numeral: true,
@@ -124,18 +139,34 @@
             type: 'bar',
             data: {
                 labels: ['Jan', 'Feb', 'Mar'],
-                datasets: [{ label: 'SPPD', data: [12, 19, 3], backgroundColor: '#3b82f6' }]
+                datasets: [{
+                    label: 'SPPD',
+                    data: [12, 19, 3],
+                    backgroundColor: '#3b82f6'
+                }]
             }
         });
         // Dropzone.js
-        new Dropzone('#demo-dropzone', { url: '/upload', autoProcessQueue: false });
+        new Dropzone('#demo-dropzone', {
+            url: '/upload',
+            autoProcessQueue: false
+        });
         // SweetAlert2
         document.getElementById('demo-swal').onclick = function() {
-            Swal.fire({ title: 'Demo Alert', text: 'Ini dari SweetAlert2!', icon: 'info' });
+            Swal.fire({
+                title: 'Demo Alert',
+                text: 'Ini dari SweetAlert2!',
+                icon: 'info'
+            });
         };
         // Toastify
         document.getElementById('demo-toast').onclick = function() {
-            Toastify({ text: 'Ini notifikasi Toastify!', duration: 3000, gravity: 'top', position: 'right' }).showToast();
+            Toastify({
+                text: 'Ini notifikasi Toastify!',
+                duration: 3000,
+                gravity: 'top',
+                position: 'right'
+            }).showToast();
         };
         // Axios
         document.getElementById('demo-axios').onclick = function() {
@@ -144,19 +175,37 @@
             });
         };
         // Lodash
-        document.getElementById('demo-lodash').innerText = 'Unique: ' + _.uniq([1,2,2,3,4,4,5]).join(', ');
+        document.getElementById('demo-lodash').innerText = 'Unique: ' + _.uniq([1, 2, 2, 3, 4, 4, 5]).join(', ');
         // jQuery Validation
-        $('#demo-form').validate({ rules: { email: { required: true, email: true } } });
+        $('#demo-form').validate({
+            rules: {
+                email: {
+                    required: true,
+                    email: true
+                }
+            }
+        });
         // Intro.js
         document.getElementById('demo-intro').onclick = function() {
-            introJs().setOptions({ steps: [
-                { element: '#demo-table', intro: 'Ini adalah tabel DataTables.' },
-                { element: '#demo-select2', intro: 'Ini adalah dropdown Select2.' },
-                { element: '#demo-date', intro: 'Ini adalah input tanggal Flatpickr.' }
-            ] }).start();
+            introJs().setOptions({
+                steps: [{
+                        element: '#demo-table',
+                        intro: 'Ini adalah tabel DataTables.'
+                    },
+                    {
+                        element: '#demo-select2',
+                        intro: 'Ini adalah dropdown Select2.'
+                    },
+                    {
+                        element: '#demo-date',
+                        intro: 'Ini adalah input tanggal Flatpickr.'
+                    }
+                ]
+            }).start();
         };
         // AOS
         AOS.init();
     </script>
 </body>
+
 </html>
