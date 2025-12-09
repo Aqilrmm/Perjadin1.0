@@ -6,10 +6,6 @@ use App\Controllers\BaseController;
 use App\Libraries\SPPD\NotaDinasGenerator;
 use App\Libraries\SPPD\SPPDGenerator;
 
-// ========================================
-// APPROVAL SPPD CONTROLLER
-// ========================================
-
 class ApprovalSPPDController extends BaseController
 {
     protected $sppdModel;
@@ -81,12 +77,18 @@ class ApprovalSPPDController extends BaseController
                 return redirect()->back()->with('error', 'SPPD tidak ditemukan');
             }
 
+            // Set proper headers for PDF display
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: inline; filename="Preview_Nota_Dinas_' . $id . '.pdf"');
+            
             // Generate Nota Dinas PDF and display inline
             $this->notaDinasGenerator->generate($id, 'I');
+            exit; // Important: stop execution after PDF output
             
         } catch (\Exception $e) {
             log_message('error', 'Preview SPPD Error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal memuat preview: ' . $e->getMessage());
+            echo '<html><body><h3>Error: ' . $e->getMessage() . '</h3></body></html>';
+            exit;
         }
     }
 
@@ -119,13 +121,8 @@ class ApprovalSPPDController extends BaseController
             try {
                 // Generate and save Nota Dinas PDF
                 $notaDinasFile = $this->notaDinasGenerator->saveToFile($id);
-                
-                // Update SPPD with nota dinas file info (if you have a field for it)
-                // $this->sppdModel->update($id, ['file_nota_dinas' => $notaDinasFile['filename']]);
-                
             } catch (\Exception $e) {
                 log_message('error', 'Nota Dinas Generation Error: ' . $e->getMessage());
-                // Don't fail the approval if PDF generation fails
             }
 
             // Send notification
@@ -163,9 +160,6 @@ class ApprovalSPPDController extends BaseController
         return $this->respondError('Gagal menolak SPPD', null, 500);
     }
 
-    /**
-     * Download Nota Dinas PDF
-     */
     public function downloadNotaDinas($id)
     {
         try {
@@ -192,19 +186,14 @@ class ApprovalSPPDController extends BaseController
         $buttons = '<div class="flex gap-2">';
         $buttons .= '<button class="btn-detail text-blue-600 hover:text-blue-800" data-id="' . $id . '" title="Detail"><i class="fas fa-eye"></i></button>';
         
-        // Preview button - show for all pending SPPD
         if ($status == 'pending') {
             $buttons .= '<button class="btn-preview text-purple-600 hover:text-purple-800" data-id="' . $id . '" title="Preview Nota Dinas"><i class="fas fa-file-pdf"></i></button>';
-        }
-        
-        // Download button - show for approved SPPD
-        if ($status == 'approved') {
-            $buttons .= '<a href="' . site_url('kepaladinas/sppd/download-nota-dinas/' . $id) . '" class="text-purple-600 hover:text-purple-800" title="Download Nota Dinas" target="_blank"><i class="fas fa-download"></i></a>';
-        }
-        
-        if ($status == 'pending') {
             $buttons .= '<button class="btn-approve text-green-600 hover:text-green-800" data-id="' . $id . '" title="Setujui"><i class="fas fa-check-circle"></i></button>';
             $buttons .= '<button class="btn-reject text-red-600 hover:text-red-800" data-id="' . $id . '" title="Tolak"><i class="fas fa-times-circle"></i></button>';
+        }
+        
+        if ($status == 'approved') {
+            $buttons .= '<a href="' . site_url('kepaladinas/sppd/download-nota-dinas/' . $id) . '" class="text-purple-600 hover:text-purple-800" title="Download Nota Dinas" target="_blank"><i class="fas fa-download"></i></a>';
         }
         
         $buttons .= '</div>';

@@ -129,9 +129,9 @@ class SPPDGenerator
             ];
         }
 
-        // Check if number already exists - FIXED: Changed whereNotNull to where with IS NOT NULL
+        // Check if number already exists
         $exists = $this->sppdModel->where('no_sppd', $noSppd)
-                                  ->where('deleted_at IS NULL')
+                                  ->where('deleted_at', null)
                                   ->first();
 
         if ($exists) {
@@ -182,7 +182,7 @@ class SPPDGenerator
         $pattern = "SPPD/{$kodeBidang}/{$bulanRomawi}/{$tahun}/%";
         
         $lastSppd = $this->sppdModel->like('no_sppd', $pattern)
-                                    ->where('deleted_at IS NULL')
+                                    ->where('deleted_at', null)
                                     ->orderBy('no_sppd', 'DESC')
                                     ->first();
 
@@ -237,7 +237,7 @@ class SPPDGenerator
         }
 
         return $this->sppdModel->like('no_sppd', $pattern)
-                              ->where('deleted_at IS NULL')
+                              ->where('deleted_at', null)
                               ->countAllResults();
     }
 
@@ -267,13 +267,13 @@ class SPPDGenerator
             $stats['total_year'] += $count;
         }
 
-        // Count by status - FIXED: Changed whereNotNull to where with IS NOT NULL
+        // Count by status
         $statuses = ['draft', 'pending', 'approved', 'rejected', 'submitted', 'verified', 'closed'];
         foreach ($statuses as $status) {
             $count = $this->sppdModel->where('bidang_id', $bidangId)
                                      ->where('YEAR(tanggal_berangkat)', $tahun)
                                      ->where('status', $status)
-                                     ->where('deleted_at IS NULL')
+                                     ->where('deleted_at', null)
                                      ->countAllResults();
             
             $stats['by_status'][$status] = $count;
@@ -344,14 +344,14 @@ class SPPDGenerator
     public function bulkGenerate(?int $bidangId = null): array
     {
         $builder = $this->sppdModel->builder();
-        $builder->where('(no_sppd IS NULL OR no_sppd = "")')
-               ->where('deleted_at IS NULL');
+        $builder->where('no_sppd IS NULL OR no_sppd = ""', null, false)
+               ->where('deleted_at', null);
 
         if ($bidangId) {
             $builder->where('bidang_id', $bidangId);
         }
 
-        $draftSppds = $builder->get()->getResultArray();
+        $draftSppds = $builder->findAll();
 
         $success = 0;
         $failed = 0;

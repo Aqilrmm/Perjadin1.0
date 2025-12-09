@@ -9,32 +9,13 @@ class SPPDModel extends BaseModel
     protected $table = 'sppd';
     protected $primaryKey = 'id';
     protected $allowedFields = [
-        'uuid',
-        'no_sppd',
-        'sub_kegiatan_id',
-        'bidang_id',
-        'tipe_perjalanan',
-        'maksud_perjalanan',
-        'dasar_surat',
-        'file_surat_tugas',
-        'alat_angkut',
-        'tempat_berangkat',
-        'tempat_tujuan',
-        'tanggal_berangkat',
-        'tanggal_kembali',
-        'lama_perjalanan',
-        'penanggung_jawab',
-        'estimasi_biaya',
-        'realisasi_biaya',
-        'status',
-        'catatan_kepala_dinas',
-        'catatan_keuangan',
-        'approved_by_kepaladinas',
-        'approved_at_kepaladinas',
-        'verified_by_keuangan',
-        'verified_at_keuangan',
-        'submitted_at',
-        'created_by'
+        'uuid', 'no_sppd', 'sub_kegiatan_id', 'bidang_id', 'tipe_perjalanan',
+        'maksud_perjalanan', 'dasar_surat', 'file_surat_tugas', 'alat_angkut',
+        'tempat_berangkat', 'tempat_tujuan', 'tanggal_berangkat', 'tanggal_kembali',
+        'lama_perjalanan', 'penanggung_jawab', 'estimasi_biaya', 'realisasi_biaya',
+        'status', 'catatan_kepala_dinas', 'catatan_keuangan', 'approved_by_kepaladinas',
+        'approved_at_kepaladinas', 'verified_by_keuangan', 'verified_at_keuangan',
+        'submitted_at', 'created_by'
     ];
 
     protected $useTimestamps = true;
@@ -47,7 +28,6 @@ class SPPDModel extends BaseModel
         'tipe_perjalanan' => 'required',
         'maksud_perjalanan' => 'required|min_length[20]',
         'dasar_surat' => 'required',
-        'alat_angkut' => 'permit_empty',
         'tempat_berangkat' => 'required',
         'tempat_tujuan' => 'required',
         'tanggal_berangkat' => 'required|valid_date',
@@ -70,20 +50,12 @@ class SPPDModel extends BaseModel
     {
         return sprintf(
             '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0x0fff) | 0x4000,
-            mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff)
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0x0fff) | 0x4000, mt_rand(0, 0x3fff) | 0x8000,
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
         );
     }
 
-    /**
-     * Get SPPD with complete relations
-     */
     public function getWithRelations($id)
     {
         return $this->select('sppd.*, 
@@ -103,23 +75,15 @@ class SPPDModel extends BaseModel
             ->first();
     }
 
-    /**
-     * Get SPPD by bidang
-     */
     public function getByBidang($bidangId, $status = null)
     {
         $builder = $this->where('bidang_id', $bidangId);
-
         if ($status) {
             $builder->where('status', $status);
         }
-
         return $builder->orderBy('created_at', 'DESC')->findAll();
     }
 
-    /**
-     * Get SPPD by pegawai
-     */
     public function getByPegawai($pegawaiId, $status = null)
     {
         $builder = $this->select('sppd.*')
@@ -130,27 +94,18 @@ class SPPDModel extends BaseModel
         if ($status) {
             $builder->where('sppd.status', $status);
         }
-
         return $builder->orderBy('sppd.created_at', 'DESC')->findAll();
     }
 
-    /**
-     * Get SPPD by status
-     */
     public function getByStatus($status, $bidangId = null)
     {
         $builder = $this->where('status', $status);
-
         if ($bidangId) {
             $builder->where('bidang_id', $bidangId);
         }
-
         return $builder->orderBy('created_at', 'DESC')->findAll();
     }
 
-    /**
-     * Submit SPPD for approval
-     */
     public function submitSPPD($id)
     {
         return $this->update($id, [
@@ -159,9 +114,6 @@ class SPPDModel extends BaseModel
         ]);
     }
 
-    /**
-     * Approve SPPD
-     */
     public function approveSPPD($id, $approvedBy, $noSPPD, $catatan = null)
     {
         return $this->update($id, [
@@ -173,9 +125,6 @@ class SPPDModel extends BaseModel
         ]);
     }
 
-    /**
-     * Reject SPPD
-     */
     public function rejectSPPD($id, $catatan)
     {
         return $this->update($id, [
@@ -184,9 +133,6 @@ class SPPDModel extends BaseModel
         ]);
     }
 
-    /**
-     * Submit SPPD for verification (from pegawai)
-     */
     public function submitForVerification($id)
     {
         return $this->update($id, [
@@ -195,9 +141,6 @@ class SPPDModel extends BaseModel
         ]);
     }
 
-    /**
-     * Verify SPPD (keuangan)
-     */
     public function verifySPPD($id, $verifiedBy, $catatan = null)
     {
         return $this->update($id, [
@@ -208,9 +151,6 @@ class SPPDModel extends BaseModel
         ]);
     }
 
-    /**
-     * Return SPPD for revision
-     */
     public function returnForRevision($id, $catatan)
     {
         return $this->update($id, [
@@ -219,20 +159,15 @@ class SPPDModel extends BaseModel
         ]);
     }
 
-    /**
-     * Check if pegawai has overlapping SPPD
-     * FIXED: Mengganti whereNotIn dengan where dengan NOT IN manual
-     */
     public function checkPegawaiOverlap($pegawaiId, $tanggalBerangkat, $tanggalKembali, $excludeSppdId = null)
     {
         $builder = $this->db->table('sppd')
             ->select('sppd.*')
             ->join('sppd_pegawai', 'sppd_pegawai.sppd_id = sppd.id')
             ->where('sppd_pegawai.pegawai_id', $pegawaiId)
-            ->where('sppd.deleted_at IS NULL')
+            ->where('sppd.deleted_at', null)
             ->where("sppd.status NOT IN ('rejected', 'draft')");
 
-        // Tambah filter overlap HANYA kalau dua tanggal valid
         if (!empty($tanggalBerangkat) && !empty($tanggalKembali)) {
             $builder->groupStart()
                 ->where('sppd.tanggal_berangkat <=', $tanggalKembali)
@@ -247,13 +182,9 @@ class SPPDModel extends BaseModel
         return $builder->get()->getResult();
     }
 
-
-    /**
-     * Get statistics
-     */
     public function getStatistics($bidangId = null, $tahun = null)
     {
-        $builder = $this->where('deleted_at IS NULL');
+        $builder = $this->where('deleted_at', null);
 
         if ($bidangId) {
             $builder->where('bidang_id', $bidangId);
@@ -266,15 +197,12 @@ class SPPDModel extends BaseModel
         return [
             'total_sppd' => $builder->countAllResults(false),
             'total_anggaran' => $builder->selectSum('estimasi_biaya')->get()->getRow()->estimasi_biaya ?? 0,
-            'pending' => $this->where('status', 'pending')->where('deleted_at IS NULL')->countAllResults(),
-            'approved' => $this->where('status', 'approved')->where('deleted_at IS NULL')->countAllResults(),
-            'verified' => $this->where('status', 'verified')->where('deleted_at IS NULL')->countAllResults(),
+            'pending' => $this->where('status', 'pending')->where('deleted_at', null)->countAllResults(),
+            'approved' => $this->where('status', 'approved')->where('deleted_at', null)->countAllResults(),
+            'verified' => $this->where('status', 'verified')->where('deleted_at', null)->countAllResults(),
         ];
     }
 
-    /**
-     * Get DataTables data
-     */
     public function getDatatablesData($request)
     {
         $draw = $request['draw'];
@@ -282,7 +210,7 @@ class SPPDModel extends BaseModel
         $length = $request['length'];
         $searchValue = $request['search']['value'] ?? '';
 
-        $totalRecords = $this->where('deleted_at IS NULL')->countAllResults();
+        $totalRecords = $this->where('deleted_at', null)->countAllResults();
 
         $builder = $this->builder();
         $builder->select('sppd.*, 
@@ -296,7 +224,7 @@ class SPPDModel extends BaseModel
             ->join('programs', 'programs.id = kegiatan.program_id', 'left')
             ->join('users as penanggung_jawab', 'penanggung_jawab.id = sppd.penanggung_jawab', 'left')
             ->join('sppd_pegawai', 'sppd_pegawai.sppd_id = sppd.id', 'left')
-            ->where('sppd.deleted_at IS NULL')
+            ->where('sppd.deleted_at', null)
             ->groupBy('sppd.id');
 
         if ($searchValue) {
