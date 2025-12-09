@@ -204,10 +204,10 @@
             } elseif ($role === 'kepaladinas') {
                 $menuItems = [
                     ['icon' => 'fa-home', 'label' => 'Dashboard', 'url' => 'kepaladinas/dashboard'],
-                    ['icon' => 'fa-tasks', 'label' => 'Approval Program', 'url' => 'kepaladinas/approval/program'],
-                    ['icon' => 'fa-list', 'label' => 'Approval Kegiatan', 'url' => 'kepaladinas/approval/kegiatan'],
-                    ['icon' => 'fa-clipboard-list', 'label' => 'Approval Sub Kegiatan', 'url' => 'kepaladinas/approval/subkegiatan'],
-                    ['icon' => 'fa-plane', 'label' => 'Approval SPPD', 'url' => 'kepaladinas/approval/sppd'],
+                    ['icon' => 'fa-tasks', 'label' => 'Approval Program', 'url' => 'kepaladinas/programs/approval'],
+                    ['icon' => 'fa-list', 'label' => 'Approval Kegiatan', 'url' => 'kepaladinas/kegiatan/approval'],
+                    ['icon' => 'fa-clipboard-list', 'label' => 'Approval Sub Kegiatan', 'url' => 'kepaladinas/subkegiatan/approval'],
+                    ['icon' => 'fa-plane', 'label' => 'Approval SPPD', 'url' => 'kepaladinas/sppd/approval'],
                     ['icon' => 'fa-chart-bar', 'label' => 'Analytics', 'url' => 'kepaladinas/analytics'],
                 ];
             } elseif ($role === 'kepalabidang') {
@@ -465,6 +465,53 @@
         $.ajaxSetup({
             headers: {
                 'X-CSRF-TOKEN': csrfToken
+            }
+        });
+
+        // Ensure CSRF token is included in POST/PUT/DELETE request bodies for jQuery ajax
+        const csrfName = '<?= csrf_token() ?>';
+        const csrfHash = csrfToken;
+
+        $.ajaxPrefilter(function(options, originalOptions, jqXHR) {
+            const method = (options.type || '').toUpperCase();
+            if (!method || method === 'GET' || method === 'HEAD') return;
+
+            // If data is FormData, append directly
+            if (options.data instanceof FormData) {
+                options.data.append(csrfName, csrfHash);
+                return;
+            }
+
+            // If data is a function (DataTables can provide a function), wrap it
+            if (typeof options.data === 'function') {
+                const origFn = options.data;
+                options.data = function(d) {
+                    const result = origFn(d) || {};
+                    if (result instanceof FormData) {
+                        result.append(csrfName, csrfHash);
+                        return result;
+                    }
+                    if (typeof result === 'string') {
+                        return result + (result ? '&' : '') + encodeURIComponent(csrfName) + '=' + encodeURIComponent(csrfHash);
+                    }
+                    // assume object
+                    result[csrfName] = csrfHash;
+                    return result;
+                };
+                return;
+            }
+
+            // If data is an object, add property
+            if (options.data && typeof options.data === 'object') {
+                options.data[csrfName] = csrfHash;
+                return;
+            }
+
+            // If data is a string or undefined, append as query string
+            if (typeof options.data === 'string') {
+                options.data = options.data + (options.data ? '&' : '') + encodeURIComponent(csrfName) + '=' + encodeURIComponent(csrfHash);
+            } else {
+                options.data = encodeURIComponent(csrfName) + '=' + encodeURIComponent(csrfHash);
             }
         });
 

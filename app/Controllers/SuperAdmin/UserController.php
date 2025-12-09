@@ -140,10 +140,20 @@ class UserController extends BaseController
             $rules[$key] = str_replace('{id}', $id, $rule);
         }
 
-        // Password is optional on update
-        if ($this->request->getPost('password')) {
-            $rules['password'] = 'min_length[8]';
+        // If the user is keeping the same nip_nik or email, remove is_unique check for those fields
+        $postNip = $this->request->getPost('nip_nik');
+        if ($postNip !== null && $postNip == $user['nip_nik'] && isset($rules['nip_nik'])) {
+            $rules['nip_nik'] = str_replace('is_unique[users.nip_nik,id,' . $id . ']', '', $rules['nip_nik']);
+            $rules['nip_nik'] = trim($rules['nip_nik'], '|');
         }
+
+        $postEmail = $this->request->getPost('email');
+        if ($postEmail !== null && $postEmail == $user['email'] && isset($rules['email'])) {
+            $rules['email'] = str_replace('is_unique[users.email,id,' . $id . ']', '', $rules['email']);
+            $rules['email'] = trim($rules['email'], '|');
+        }
+
+        // Password is optional on update; only validate/set if provided
 
         $valid = $this->validate($rules);
         if ($valid !== true) {
@@ -162,7 +172,7 @@ class UserController extends BaseController
             'role' => $this->request->getPost('role'),
         ];
 
-        // Update password if provided
+        // Update password only if provided
         if ($this->request->getPost('password')) {
             $data['password'] = $this->request->getPost('password');
         }
@@ -180,11 +190,24 @@ class UserController extends BaseController
             $data['foto'] = $newName;
         }
 
-        if ($this->userModel->update($id, $data)) {
+        // We've already validated input via controller rules, skip model validation to avoid
+        // duplicate/incorrect checks (model has its own validationRules with {id} placeholder).
+        $this->userModel->skipValidation(true);
+
+        $updated = $this->userModel->update($id, $data);
+
+        if ($updated) {
             $this->logActivity('UPDATE_USER', "Updated user: {$data['nama']}");
             return $this->respondSuccess('User berhasil diupdate');
         }
 
+        // Try to return model validation errors if available
+        $modelErrors = $this->userModel->errors();
+        if (!empty($modelErrors)) {
+            return $this->respondError('Validasi gagal', $modelErrors, 422);
+        }
+
+        // Fallback: return generic error
         return $this->respondError('Gagal mengupdate user', null, 500);
     }
 

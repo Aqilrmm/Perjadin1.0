@@ -35,12 +35,14 @@ class KegiatanController extends BaseController
 
         $request = $this->request->getPost();
         $request['filters']['bidang_id'] = user_bidang_id();
-        $data = $this->kegiatanModel->getDatatablesData($request);
+
+        // Use optimized datatable that joins programs and computes sisa in SQL
+        $data = $this->kegiatanModel->getDatatablesWithBudget($request);
 
         foreach ($data['data'] as $key => $row) {
             $data['data'][$key]->status_badge = get_status_badge($row->status);
-            $data['data'][$key]->anggaran_formatted = format_rupiah($row->anggaran_kegiatan);
-            $data['data'][$key]->sisa_formatted = format_rupiah($row->sisa_anggaran);
+            $data['data'][$key]->anggaran_formatted = format_rupiah($row->anggaran_kegiatan ?? 0);
+            $data['data'][$key]->sisa_formatted = format_rupiah($row->sisa_anggaran ?? 0);
             $data['data'][$key]->action = $this->getActionButtons($row->id, $row->status);
         }
 
@@ -87,6 +89,7 @@ class KegiatanController extends BaseController
         $saveAsDraft = $this->request->getPost('save_as_draft') == 'true';
 
         $data = [
+            'bidang_id' => user_bidang_id(),
             'program_id' => $programId,
             'kode_kegiatan' => strtoupper($this->request->getPost('kode_kegiatan')),
             'nama_kegiatan' => $this->request->getPost('nama_kegiatan'),

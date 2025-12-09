@@ -29,7 +29,12 @@ class ApprovalKegiatanController extends BaseController
         }
 
         $request = $this->request->getPost();
-        $data = $this->kegiatanModel->getDatatablesData($request);
+        // Use the datatable helper that joins programs and aggregates budgets
+        if (method_exists($this->kegiatanModel, 'getDatatablesWithBudget')) {
+            $data = $this->kegiatanModel->getDatatablesWithBudget($request);
+        } else {
+            $data = $this->kegiatanModel->getDatatablesData($request);
+        }
 
         foreach ($data['data'] as $key => $row) {
             $data['data'][$key]->status_badge = get_status_badge($row->status);

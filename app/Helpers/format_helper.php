@@ -412,4 +412,216 @@ if (!function_exists('sanitize_filename')) {
         
         return strtolower($filename);
     }
+    /**
+ * TAMBAHKAN FUNGSI-FUNGSI INI KE FILE app/Helpers/format_helper.php
+ * Copy dan paste di bagian akhir file (sebelum closing tag jika ada)
+ */
+
+if (!function_exists('format_datetime_id')) {
+    /**
+     * Format datetime to Indonesian format (alias for format_tanggal_waktu)
+     * 
+     * @param string $datetime
+     * @param bool $includeTime
+     * @return string
+     */
+    function format_datetime_id($datetime, $includeTime = true)
+    {
+        if (empty($datetime) || $datetime == '0000-00-00 00:00:00') {
+            return '-';
+        }
+        
+        if ($includeTime) {
+            return format_tanggal_waktu($datetime);
+        }
+        
+        return format_tanggal($datetime, false);
+    }
+}
+
+if (!function_exists('time_ago_id')) {
+    /**
+     * Get time ago in Indonesian (alias for time_ago)
+     * 
+     * @param string $datetime
+     * @return string
+     */
+    function time_ago_id($datetime)
+    {
+        return time_ago($datetime);
+    }
+}
+
+if (!function_exists('get_month_name_id')) {
+    /**
+     * Get Indonesian month name
+     * 
+     * @param int $month (1-12)
+     * @return string
+     */
+    function get_month_name_id($month)
+    {
+        $months = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember'
+        ];
+        
+        return $months[(int)$month] ?? '';
+    }
+}
+
+if (!function_exists('get_short_month_name_id')) {
+    /**
+     * Get Indonesian short month name
+     * 
+     * @param int $month (1-12)
+     * @return string
+     */
+    function get_short_month_name_id($month)
+    {
+        $months = [
+            1 => 'Jan',
+            2 => 'Feb',
+            3 => 'Mar',
+            4 => 'Apr',
+            5 => 'Mei',
+            6 => 'Jun',
+            7 => 'Jul',
+            8 => 'Ags',
+            9 => 'Sep',
+            10 => 'Okt',
+            11 => 'Nov',
+            12 => 'Des'
+        ];
+        
+        return $months[(int)$month] ?? '';
+    }
+}
+
+if (!function_exists('format_month_year')) {
+    /**
+     * Format month-year string to Indonesian
+     * 
+     * @param string $monthYear (format: YYYY-MM or MM-YYYY or "January 2024")
+     * @return string
+     */
+    function format_month_year($monthYear)
+    {
+        if (empty($monthYear)) {
+            return '';
+        }
+        
+        // Handle different formats
+        if (strpos($monthYear, '-') !== false) {
+            $parts = explode('-', $monthYear);
+            
+            if (strlen($parts[0]) === 4) {
+                // Format: YYYY-MM
+                $year = $parts[0];
+                $month = (int)$parts[1];
+            } else {
+                // Format: MM-YYYY
+                $month = (int)$parts[0];
+                $year = $parts[1];
+            }
+            
+            return get_month_name_id($month) . ' ' . $year;
+        }
+        
+        // Handle "January 2024" format
+        if (preg_match('/([A-Za-z]+)\s+(\d{4})/', $monthYear, $matches)) {
+            $monthName = $matches[1];
+            $year = $matches[2];
+            
+            // Convert English month to Indonesian
+            $englishMonths = [
+                'january' => 'Januari', 'february' => 'Februari', 'march' => 'Maret',
+                'april' => 'April', 'may' => 'Mei', 'june' => 'Juni',
+                'july' => 'Juli', 'august' => 'Agustus', 'september' => 'September',
+                'october' => 'Oktober', 'november' => 'November', 'december' => 'Desember'
+            ];
+            
+            $monthIndo = $englishMonths[strtolower($monthName)] ?? $monthName;
+            
+            return $monthIndo . ' ' . $year;
+        }
+        
+        return $monthYear;
+    }
+}
+
+if (!function_exists('get_day_name_id')) {
+    /**
+     * Get Indonesian day name
+     * 
+     * @param string $date (Y-m-d format)
+     * @return string
+     */
+    function get_day_name_id($date)
+    {
+        $days = [
+            'Sunday' => 'Minggu',
+            'Monday' => 'Senin',
+            'Tuesday' => 'Selasa',
+            'Wednesday' => 'Rabu',
+            'Thursday' => 'Kamis',
+            'Friday' => 'Jumat',
+            'Saturday' => 'Sabtu'
+        ];
+        
+        $dayName = date('l', strtotime($date));
+        
+        return $days[$dayName] ?? $dayName;
+    }
+}
+
+if (!function_exists('format_date_range')) {
+    /**
+     * Format date range in Indonesian
+     * 
+     * @param string $startDate
+     * @param string $endDate
+     * @return string
+     */
+    function format_date_range($startDate, $endDate)
+    {
+        if (empty($startDate) || empty($endDate)) {
+            return '-';
+        }
+        
+        $start = strtotime($startDate);
+        $end = strtotime($endDate);
+        
+        $startDay = date('j', $start);
+        $startMonth = get_month_name_id(date('n', $start));
+        $startYear = date('Y', $start);
+        
+        $endDay = date('j', $end);
+        $endMonth = get_month_name_id(date('n', $end));
+        $endYear = date('Y', $end);
+        
+        // Same month and year
+        if ($startMonth === $endMonth && $startYear === $endYear) {
+            return $startDay . '-' . $endDay . ' ' . $startMonth . ' ' . $startYear;
+        }
+        
+        // Same year, different month
+        if ($startYear === $endYear) {
+            return $startDay . ' ' . $startMonth . ' - ' . $endDay . ' ' . $endMonth . ' ' . $startYear;
+        }
+        
+        // Different year
+        return $startDay . ' ' . $startMonth . ' ' . $startYear . ' - ' . $endDay . ' ' . $endMonth . ' ' . $endYear;
+    }
+}
 }

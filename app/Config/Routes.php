@@ -16,6 +16,13 @@ $routes->group('auth', function ($routes) {
     $routes->get('logout', 'Auth\AuthController::logout');
     $routes->post('logout', 'Auth\AuthController::logout');
     $routes->get('check-session', 'Auth\AuthController::checkSession');
+    // Profile (my account)
+    $routes->get('profile', 'Auth\ProfileController::index');
+    $routes->post('profile/update', 'Auth\ProfileController::update');
+    $routes->post('profile/change-password', 'Auth\ProfileController::changePassword');
+    $routes->post('profile/upload-photo', 'Auth\ProfileController::uploadPhoto');
+    $routes->post('profile/delete-photo', 'Auth\ProfileController::deletePhoto');
+    $routes->get('profile/activity', 'Auth\ProfileController::activityHistory');
 });
 
 // Super Admin Routes
@@ -48,10 +55,23 @@ $routes->group('superadmin', ['filter' => 'auth:superadmin'], function ($routes)
         $routes->delete('delete/(:num)', 'SuperAdmin\BidangController::delete/$1');
     });
 
+    // Blocked Users (Admin)
+    $routes->group('blocked', function ($routes) {
+        $routes->get('/', 'SuperAdmin\BlockController::index');
+        $routes->post('datatable', 'SuperAdmin\BlockController::datatable');
+        $routes->get('detail/(:num)', 'SuperAdmin\BlockController::detail/$1');
+        $routes->post('block', 'SuperAdmin\BlockController::block');
+        $routes->post('unblock/(:num)', 'SuperAdmin\BlockController::unblock/$1');
+        $routes->post('bulk-unblock', 'SuperAdmin\BlockController::bulkUnblock');
+        $routes->get('history/(:num)', 'SuperAdmin\BlockController::history/$1');
+        $routes->get('statistics', 'SuperAdmin\BlockController::statistics');
+    });
+
     // Logs
     $routes->group('logs', function ($routes) {
         $routes->get('/', 'SuperAdmin\LogController::index');
         $routes->post('datatable', 'SuperAdmin\LogController::datatable');
+        $routes->get('detail/(:num)', 'SuperAdmin\LogController::detail/$1');
     });
 });
 
@@ -72,6 +92,7 @@ $routes->group('kepaladinas', ['filter' => 'auth:kepaladinas'], function ($route
     $routes->group('kegiatan', function ($routes) {
         $routes->get('approval', 'KepalaDinas\ApprovalKegiatanController::index');
         $routes->post('datatable', 'KepalaDinas\ApprovalKegiatanController::datatable');
+        $routes->get('detail/(:num)', 'KepalaDinas\ApprovalKegiatanController::detail/$1');
         $routes->post('approve/(:num)', 'KepalaDinas\ApprovalKegiatanController::approve/$1');
         $routes->post('reject/(:num)', 'KepalaDinas\ApprovalKegiatanController::reject/$1');
     });
@@ -80,6 +101,7 @@ $routes->group('kepaladinas', ['filter' => 'auth:kepaladinas'], function ($route
     $routes->group('subkegiatan', function ($routes) {
         $routes->get('approval', 'KepalaDinas\ApprovalSubKegiatanController::index');
         $routes->post('datatable', 'KepalaDinas\ApprovalSubKegiatanController::datatable');
+        $routes->get('detail/(:num)', 'KepalaDinas\ApprovalSubKegiatanController::detail/$1');
         $routes->post('approve/(:num)', 'KepalaDinas\ApprovalSubKegiatanController::approve/$1');
         $routes->post('reject/(:num)', 'KepalaDinas\ApprovalSubKegiatanController::reject/$1');
     });
@@ -117,6 +139,7 @@ $routes->group('kepalabidang', ['filter' => 'auth:kepalabidang'], function ($rou
     $routes->group('kegiatan', function ($routes) {
         $routes->get('/', 'KepalaBidang\KegiatanController::index');
         $routes->post('datatable', 'KepalaBidang\KegiatanController::datatable');
+        $routes->get('get/(:num)', 'KepalaBidang\KegiatanController::get/$1');
         $routes->post('create', 'KepalaBidang\KegiatanController::create');
         $routes->post('update/(:num)', 'KepalaBidang\KegiatanController::update/$1');
         $routes->post('submit/(:num)', 'KepalaBidang\KegiatanController::submit/$1');

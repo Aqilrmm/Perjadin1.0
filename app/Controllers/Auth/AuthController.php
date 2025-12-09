@@ -92,7 +92,7 @@ class AuthController extends BaseController
 
         $this->authService->logout();
 
-        return redirect()->to('/login')->with('success', 'Logout berhasil');
+        return redirect()->to('/auth/login')->with('success', 'Logout berhasil');
     }
 
     /**

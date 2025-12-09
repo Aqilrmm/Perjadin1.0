@@ -54,7 +54,7 @@
         <!-- Remember Me & Forgot Password -->
         <div class="flex items-center justify-between">
             <label class="flex items-center">
-                <input type="checkbox" name="remember_me" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                <input type="checkbox" name="remember_me" id="remember_me" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                 <span class="ml-2 text-sm text-gray-700">Ingat saya</span>
             </label>
             <a href="<?= base_url('auth/forgot-password') ?>" class="text-sm text-blue-600 hover:text-blue-800 transition">
@@ -64,6 +64,7 @@
 
         <!-- Login Button -->
         <button type="submit" 
+                id="loginButton"
                 class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition duration-200 shadow-lg">
             <i class="fas fa-sign-in-alt mr-2"></i>Login
         </button>
@@ -78,90 +79,112 @@
 
 <?= $this->section('scripts') ?>
 <script>
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() {
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+    const loginForm = document.getElementById('loginForm');
+    const loginButton = document.getElementById('loginButton');
+
     // Toggle password visibility
-    $('#togglePassword').click(function() {
-        const passwordInput = $('#password');
-        const eyeIcon = $('#eyeIcon');
-        
-        if (passwordInput.attr('type') === 'password') {
-            passwordInput.attr('type', 'text');
-            eyeIcon.removeClass('fa-eye').addClass('fa-eye-slash');
+    togglePassword.addEventListener('click', function() {
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
         } else {
-            passwordInput.attr('type', 'password');
-            eyeIcon.removeClass('fa-eye-slash').addClass('fa-eye');
+            passwordInput.type = 'password';
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
         }
     });
 
-    // Form validation and submission
-    $('#loginForm').on('submit', function(e) {
+    // Form submission
+    loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         // Clear previous errors
-        $('.error-nip_nik, .error-password').addClass('hidden').text('');
-        
-        const formData = {
-            nip_nik: $('#nip_nik').val(),
-            password: $('#password').val(),
-            remember_me: $('input[name="remember_me"]').is(':checked')
-        };
-
-        // Show loading
-        Swal.fire({
-            title: 'Memproses...',
-            text: 'Mohon tunggu',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
+        document.querySelectorAll('.error-nip_nik, .error-password').forEach(el => {
+            el.classList.add('hidden');
+            el.textContent = '';
         });
 
-        // Submit login
-        $.ajax({
-            url: '<?= base_url('auth/login') ?>',
-            type: 'POST',
-            data: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            success: function(response) {
-                Swal.close();
-                
-                if (response.status) {
+        // Get form data
+        const nipNik = document.getElementById('nip_nik').value;
+        const password = document.getElementById('password').value;
+        const rememberMe = document.getElementById('remember_me').checked;
+        const csrfToken = document.querySelector('input[name="<?= csrf_token() ?>"]').value;
+
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('nip_nik', nipNik);
+        formData.append('password', password);
+        formData.append('remember_me', rememberMe);
+        formData.append('<?= csrf_token() ?>', csrfToken);
+
+        // Disable button and show loading
+        loginButton.disabled = true;
+        loginButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+
+        try {
+            const response = await fetch('<?= base_url('auth/login') ?>', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.status) {
+                // Success
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Login Berhasil',
+                    text: result.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    window.location.href = result.data.redirect;
+                });
+            } else {
+                // Error response
+                if (response.status === 422 && result.errors) {
+                    // Validation errors
+                    for (let field in result.errors) {
+                        const errorElement = document.querySelector(`.error-${field}`);
+                        if (errorElement) {
+                            errorElement.classList.remove('hidden');
+                            errorElement.textContent = result.errors[field];
+                        }
+                    }
                     Swal.fire({
-                        icon: 'success',
-                        title: 'Login Berhasil',
-                        text: response.message,
-                        showConfirmButton: false,
-                        timer: 1500
-                    }).then(() => {
-                        window.location.href = response.data.redirect;
+                        icon: 'error',
+                        title: 'Validasi Gagal',
+                        text: 'Mohon periksa kembali input Anda'
                     });
                 } else {
+                    // Other errors
                     Swal.fire({
                         icon: 'error',
                         title: 'Login Gagal',
-                        text: response.message
-                    });
-                }
-            },
-            error: function(xhr) {
-                Swal.close();
-                
-                if (xhr.status === 422) {
-                    const errors = xhr.responseJSON.errors;
-                    for (let field in errors) {
-                        $(`.error-${field}`).removeClass('hidden').text(errors[field]);
-                    }
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Terjadi Kesalahan',
-                        text: xhr.responseJSON?.message || 'Silakan coba lagi'
+                        text: result.message || 'Terjadi kesalahan saat login'
                     });
                 }
             }
-        });
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Terjadi Kesalahan',
+                text: 'Tidak dapat terhubung ke server. Silakan coba lagi.'
+            });
+        } finally {
+            // Re-enable button
+            loginButton.disabled = false;
+            loginButton.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Login';
+        }
     });
 });
 </script>

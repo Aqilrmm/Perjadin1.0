@@ -89,8 +89,13 @@
 
         // Show modal add user
         $('#btn-add-user').on('click', function() {
-            $('#modal-form-user').removeClass('hidden');
+            // Clear form and open modal for create
             $('#form-user')[0].reset();
+            $('#form-user [name="id"]').val('');
+            // reset Select2 bidang
+            var bidangSel = $('#modal-form-user [name="bidang_id"]');
+            bidangSel.val(null).trigger('change');
+            $('#modal-form-user').removeClass('hidden');
         });
 
         // Export handler (simple redirect to export route)
@@ -108,17 +113,75 @@
             $.get('<?= site_url('superadmin/users/get') ?>/' + id, function(res) {
                 if (res.status) {
                     var u = res.data;
+                    // populate form fields for edit
+                    $('#form-user [name="id"]').val(u.id);
                     $('#form-user [name="nip_nik"]').val(u.nip_nik);
+                    $('#form-user [name="gelar_depan"]').val(u.gelar_depan);
                     $('#form-user [name="nama"]').val(u.nama);
+                    $('#form-user [name="gelar_belakang"]').val(u.gelar_belakang);
+                    $('#form-user [name="jenis_pegawai"]').val(u.jenis_pegawai);
                     $('#form-user [name="email"]').val(u.email);
+                    $('#form-user [name="jabatan"]').val(u.jabatan);
                     $('#form-user [name="role"]').val(u.role);
+                    // password must remain blank
+                    $('#form-user [name="password"]').val('');
+
                     if (u.bidang_id) {
                         var option = new Option(u.nama_bidang, u.bidang_id, true, true);
-                        $('#form-user [name="bidang_id"]').append(option).trigger('change');
+                        var bidang = $('#form-user [name="bidang_id"]');
+                        bidang.append(option).trigger('change');
+                    } else {
+                        $('#form-user [name="bidang_id"]').val(null).trigger('change');
                     }
+
                     $('#modal-form-user').removeClass('hidden');
                 } else {
                     Swal.fire('Error', res.message || 'Gagal memuat data', 'error');
+                }
+            });
+        });
+
+        // Block user
+        $('#users-table').on('click', '.btn-block', function() {
+            var id = $(this).data('id');
+            Swal.fire({
+                title: 'Alasan pemblokiran',
+                input: 'text',
+                inputPlaceholder: 'Masukkan alasan (opsional)',
+                showCancelButton: true
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    $.post('<?= site_url('superadmin/users/block') ?>/' + id, {
+                        reason: result.value
+                    }, function(res) {
+                        if (res.status) {
+                            Swal.fire('Terblokir', res.message, 'success');
+                            usersTable.ajax.reload();
+                        } else {
+                            Swal.fire('Error', res.message || 'Gagal memblokir', 'error');
+                        }
+                    }, 'json');
+                }
+            });
+        });
+
+        // Unblock user
+        $('#users-table').on('click', '.btn-unblock', function() {
+            var id = $(this).data('id');
+            Swal.fire({
+                title: 'Yakin ingin membuka blokir?',
+                icon: 'question',
+                showCancelButton: true
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    $.post('<?= site_url('superadmin/users/unblock') ?>/' + id, function(res) {
+                        if (res.status) {
+                            Swal.fire('Dibuka', res.message, 'success');
+                            usersTable.ajax.reload();
+                        } else {
+                            Swal.fire('Error', res.message || 'Gagal membuka blokir', 'error');
+                        }
+                    }, 'json');
                 }
             });
         });
@@ -166,23 +229,68 @@
             minimumInputLength: 0
         });
 
-        // Submit form-user via AJAX
+        // Submit form-user via AJAX (create or update based on hidden id)
         $('#form-user').on('submit', function(e) {
             e.preventDefault();
+            var id = $('#form-user [name="id"]').val();
+            var url = id ? '<?= site_url('superadmin/users/update') ?>/' + id : '<?= site_url('superadmin/users/create') ?>';
+
             var formData = new FormData(this);
+            var $btn = $('#form-user button[type="submit"]');
+            var origBtnHtml = $btn.data('orig') || $btn.html();
+            $btn.data('orig', origBtnHtml);
+
             $.ajax({
-                url: '<?= site_url('superadmin/users/create') ?>',
+                url: url,
                 method: 'POST',
                 data: formData,
                 contentType: false,
                 processData: false,
+                beforeSend: function() {
+                    $btn.prop('disabled', true).html('Mengirim...');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).html(origBtnHtml);
+                },
                 success: function(res) {
                     if (res.status) {
                         Swal.fire('Sukses', res.message, 'success');
                         $('#modal-form-user').addClass('hidden');
                         usersTable.ajax.reload();
                     } else {
-                        Swal.fire('Error', res.message || 'Validasi gagal', 'error');
+                        // if server returned validation errors, show them
+                        if (res.errors) {
+                            var html = '<ul style="text-align:left;margin:0;padding-left:1.2em;">';
+                            $.each(res.errors, function(k, v) {
+                                html += '<li>' + v + '</li>';
+                            });
+                            html += '</ul>';
+                            Swal.fire({
+                                title: 'Validasi gagal',
+                                html: html,
+                                icon: 'error'
+                            });
+                        } else {
+                            Swal.fire('Error', res.message || 'Validasi gagal', 'error');
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    var json = xhr.responseJSON;
+                    if (json && json.errors) {
+                        var html = '<ul style="text-align:left;margin:0;padding-left:1.2em;">';
+                        $.each(json.errors, function(k, v) {
+                            html += '<li>' + v + '</li>';
+                        });
+                        html += '</ul>';
+                        Swal.fire({
+                            title: 'Validasi gagal',
+                            html: html,
+                            icon: 'error'
+                        });
+                    } else {
+                        var msg = (json && json.message) ? json.message : 'Terjadi error';
+                        Swal.fire('Error', msg, 'error');
                     }
                 }
             });

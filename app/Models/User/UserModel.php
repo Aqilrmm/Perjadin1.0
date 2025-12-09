@@ -31,7 +31,7 @@ class UserModel extends BaseModel
     ];
 
     protected $useTimestamps = true;
-    protected $useSoftDeletes = true;
+    protected $useSoftDeletes = false;
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';
     protected $deletedField = 'deleted_at';
@@ -41,7 +41,7 @@ class UserModel extends BaseModel
         'nama' => 'required|min_length[3]|max_length[255]',
         'jenis_pegawai' => 'required|in_list[ASN,Non-ASN]',
         'email' => 'required|valid_email|is_unique[users.email,id,{id}]',
-        'password' => 'required|min_length[8]',
+        'password' => 'permit_empty|min_length[8]',
         'jabatan' => 'required|min_length[3]',
         'role' => 'required|in_list[superadmin,kepaladinas,kepalabidang,pegawai,keuangan]'
     ];
@@ -92,7 +92,7 @@ class UserModel extends BaseModel
     /**
      * Generate UUID v4
      */
-    protected function generateUUIDD()
+    public function generateUUIDD()
     {
         return sprintf(
             '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
@@ -125,7 +125,6 @@ class UserModel extends BaseModel
     {
         return $this->select('users.*, bidang.nama_bidang')
             ->join('bidang', 'bidang.id = users.bidang_id', 'left')
-            ->where('users.deleted_at', null)
             ->findAll();
     }
 
@@ -221,8 +220,8 @@ class UserModel extends BaseModel
     public function getDatatablesData($request)
     {
         $draw = $request['draw'];
-        $start = $request['start'];
-        $length = $request['length'];
+        $start = isset($request['start']) ? (int) $request['start'] : 0;
+        $length = isset($request['length']) ? (int) $request['length'] : 10;
         $searchValue = $request['search']['value'] ?? '';
 
         // Total records
@@ -232,6 +231,8 @@ class UserModel extends BaseModel
         $builder = $this->builder();
         $builder->select('users.*, bidang.nama_bidang')
             ->join('bidang', 'bidang.id = users.bidang_id', 'left');
+
+        // No soft-delete filtering; hard-deletes are used so show all existing rows
 
         // Apply search
         if ($searchValue) {

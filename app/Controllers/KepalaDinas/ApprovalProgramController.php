@@ -16,14 +16,14 @@ use App\Libraries\Email\EmailService;
 class ApprovalProgramController extends BaseController
 {
     protected $programModel;
-    protected $logger;
+    protected $activityLogger;
     protected $notificationService;
     protected $emailService;
 
     public function __construct()
     {
         $this->programModel = new ProgramModel();
-        $this->logger = new ActivityLogger();
+        $this->activityLogger = new ActivityLogger();
         $this->notificationService = new NotificationService();
         $this->emailService = new EmailService();
     }
@@ -82,7 +82,7 @@ class ApprovalProgramController extends BaseController
         $program['sisa_anggaran'] = $this->programModel->getSisaAnggaran($id);
 
         // Log access
-        $this->logger->logAccess(user_id(), "Program #{$id}", 'REVIEW');
+        $this->activityLogger->logAccess(user_id(), "Program #{$id}", 'REVIEW');
 
         return $this->respondSuccess('Program detail', $program);
     }
@@ -107,7 +107,7 @@ class ApprovalProgramController extends BaseController
 
         if ($this->programModel->approveProgram($id, user_id(), $catatan)) {
             // Log approval
-            $this->logger->logApproval(
+            $this->activityLogger->logApproval(
                 'program',
                 $id,
                 true,
@@ -137,14 +137,14 @@ class ApprovalProgramController extends BaseController
                     );
 
                     // Log email sent
-                    $this->logger->logNotification(
+                    $this->activityLogger->logNotification(
                         $program['created_by'],
                         'email',
                         'Program Approved Email'
                     );
                 } catch (\Exception $e) {
                     // Log email error but don't fail the approval
-                    $this->logger->logError($e, user_id(), [
+                    $this->activityLogger->logError($e, user_id(), [
                         'context' => 'send_approval_email',
                         'program_id' => $id
                     ]);
@@ -184,7 +184,7 @@ class ApprovalProgramController extends BaseController
 
         if ($this->programModel->rejectProgram($id, $catatan)) {
             // Log rejection
-            $this->logger->logApproval(
+            $this->activityLogger->logApproval(
                 'program',
                 $id,
                 false,
@@ -215,14 +215,14 @@ class ApprovalProgramController extends BaseController
                     );
 
                     // Log email sent
-                    $this->logger->logNotification(
+                    $this->activityLogger->logNotification(
                         $program['created_by'],
                         'email',
                         'Program Rejected Email'
                     );
                 } catch (\Exception $e) {
                     // Log email error but don't fail the rejection
-                    $this->logger->logError($e, user_id(), [
+                    $this->activityLogger->logError($e, user_id(), [
                         'context' => 'send_rejection_email',
                         'program_id' => $id
                     ]);
@@ -290,7 +290,7 @@ class ApprovalProgramController extends BaseController
         }
 
         // Log bulk approval
-        $this->logger->logBulk('APPROVE', 'programs', $success, user_id());
+        $this->activityLogger->logBulk('APPROVE', 'programs', $success, user_id());
 
         return $this->respondSuccess("Berhasil approve {$success} program. Gagal: {$failed}", [
             'success' => $success,

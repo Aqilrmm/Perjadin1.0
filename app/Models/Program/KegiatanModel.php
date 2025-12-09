@@ -13,6 +13,7 @@ class KegiatanModel extends BaseModel
         'program_id',
         'kode_kegiatan',
         'nama_kegiatan',
+        'bidang_id',
         'anggaran_kegiatan',
         'deskripsi',
         'status',
@@ -197,5 +198,82 @@ class KegiatanModel extends BaseModel
         }
 
         return $builder->findAll();
+    }
+
+    /**
+     * Datatables server-side with program join and budget aggregation
+     */
+    public function getDatatablesWithBudget(array $request)
+    {
+        $draw = isset($request['draw']) ? (int) $request['draw'] : 0;
+        $start = isset($request['start']) ? (int) $request['start'] : 0;
+        $length = isset($request['length']) ? (int) $request['length'] : 10;
+        $searchValue = $request['search']['value'] ?? '';
+        $orderColumnIndex = $request['order'][0]['column'] ?? 0;
+        $orderDir = $request['order'][0]['dir'] ?? 'asc';
+
+        // Define columns mapping for ordering
+        $columns = array_column($request['columns'], 'data');
+        $requestedOrderColumn = $columns[$orderColumnIndex] ?? 'kegiatan.id';
+
+        // Map request column names to real DB columns to avoid ambiguous/virtual names
+        $orderColumnMap = [
+            'kode_kegiatan' => 'kegiatan.kode_kegiatan',
+            'nama_kegiatan' => 'kegiatan.nama_kegiatan',
+            'nama_program' => 'programs.nama_program',
+            'anggaran_formatted' => 'kegiatan.anggaran_kegiatan',
+            'anggaran_kegiatan' => 'kegiatan.anggaran_kegiatan',
+            'sisa_formatted' => 'sisa_anggaran',
+        ];
+
+        $orderColumn = $orderColumnMap[$requestedOrderColumn] ?? $requestedOrderColumn;
+
+        // Base builder with joins and aggregation
+        $builder = $this->select('kegiatan.*, programs.nama_program, programs.kode_program, 
+                                  COALESCE(SUM(sub_kegiatan.anggaran_sub_kegiatan), 0) as total_terpakai, 
+                                  (kegiatan.anggaran_kegiatan - COALESCE(SUM(sub_kegiatan.anggaran_sub_kegiatan), 0)) as sisa_anggaran')
+            ->join('programs', 'programs.id = kegiatan.program_id', 'left')
+            ->join('sub_kegiatan', 'sub_kegiatan.kegiatan_id = kegiatan.id AND sub_kegiatan.deleted_at IS NULL', 'left')
+            ->where('kegiatan.deleted_at', null)
+            ->groupBy('kegiatan.id');
+
+        // Apply filters
+        if (isset($request['filters'])) {
+            foreach ($request['filters'] as $key => $value) {
+                if ($value !== null && $value !== '') {
+                    // qualify filters to kegiatan table to avoid ambiguous column names
+                    $field = (strpos($key, '.') !== false) ? $key : ('kegiatan.' . $key);
+                    $builder->where($field, $value);
+                }
+            }
+        }
+
+        // Apply search (search in some key fields)
+        if ($searchValue) {
+            $builder->groupStart()
+                ->like('kegiatan.kode_kegiatan', $searchValue)
+                ->orLike('kegiatan.nama_kegiatan', $searchValue)
+                ->orLike('programs.nama_program', $searchValue)
+                ->groupEnd();
+        }
+
+        // Total records (unfiltered) - qualify deleted_at to avoid ambiguity
+        $totalRecords = $this->builder()->where('kegiatan.deleted_at', null)->countAllResults(false);
+
+        // Count filtered
+        $totalFiltered = $builder->countAllResults(false);
+
+        // Fetch data
+        $data = $builder->orderBy($orderColumn, $orderDir)
+            ->limit($length, $start)
+            ->get()
+            ->getResult();
+
+        return [
+            'draw' => intval($draw),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $totalFiltered,
+            'data' => $data
+        ];
     }
 }

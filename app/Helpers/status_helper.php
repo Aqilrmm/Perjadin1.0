@@ -335,4 +335,201 @@ if (!function_exists('get_next_status')) {
         
         return $workflow[$type][$currentStatus] ?? null;
     }
+
+    /**
+ * TAMBAHKAN FUNGSI-FUNGSI INI KE FILE app/Helpers/status_helper.php
+ * Copy dan paste di bagian akhir file (sebelum closing tag jika ada)
+ */
+
+if (!function_exists('get_role_badge_class')) {
+    /**
+     * Get role badge CSS class
+     * 
+     * @param string $role
+     * @return string
+     */
+    function get_role_badge_class($role)
+    {
+        $badges = [
+            'superadmin' => 'bg-purple-100 text-purple-800',
+            'kepaladinas' => 'bg-blue-100 text-blue-800',
+            'kepalabidang' => 'bg-green-100 text-green-800',
+            'pegawai' => 'bg-gray-100 text-gray-800',
+            'keuangan' => 'bg-yellow-100 text-yellow-800'
+        ];
+        
+        return $badges[strtolower($role)] ?? 'bg-gray-100 text-gray-800';
+    }
+}
+
+if (!function_exists('get_status_badge_class')) {
+    /**
+     * Get status badge CSS class (for activity logs, etc)
+     * 
+     * @param string $status
+     * @return string
+     */
+    function get_status_badge_class($status)
+    {
+        $badges = [
+            'success' => 'bg-green-100 text-green-800',
+            'pending' => 'bg-yellow-100 text-yellow-800',
+            'failed' => 'bg-red-100 text-red-800',
+            'error' => 'bg-red-100 text-red-800',
+            'approved' => 'bg-blue-100 text-blue-800',
+            'rejected' => 'bg-red-100 text-red-800',
+            'draft' => 'bg-gray-100 text-gray-800',
+            'submitted' => 'bg-indigo-100 text-indigo-800',
+            'verified' => 'bg-teal-100 text-teal-800',
+            'closed' => 'bg-purple-100 text-purple-800',
+            'active' => 'bg-green-100 text-green-800',
+            'inactive' => 'bg-gray-100 text-gray-800',
+            'blocked' => 'bg-red-100 text-red-800',
+            'completed' => 'bg-green-100 text-green-800',
+            'cancelled' => 'bg-red-100 text-red-800',
+            'processing' => 'bg-blue-100 text-blue-800'
+        ];
+        
+        return $badges[strtolower($status)] ?? 'bg-gray-100 text-gray-800';
+    }
+}
+
+if (!function_exists('get_role_name')) {
+    /**
+     * Get role display name in Indonesian
+     * 
+     * @param string $role
+     * @return string
+     */
+    function get_role_name($role)
+    {
+        $names = [
+            'superadmin' => 'Super Admin',
+            'kepaladinas' => 'Kepala Dinas',
+            'kepalabidang' => 'Kepala Bidang',
+            'pegawai' => 'Pegawai',
+            'keuangan' => 'Keuangan'
+        ];
+        
+        return $names[strtolower($role)] ?? ucfirst($role);
+    }
+}
+
+if (!function_exists('get_role_badge')) {
+    /**
+     * Get role badge HTML with icon
+     * 
+     * @param string $role
+     * @return string
+     */
+    function get_role_badge($role)
+    {
+        $badges = [
+            'superadmin' => '<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800"><i class="fas fa-crown mr-1"></i> Super Admin</span>',
+            'kepaladinas' => '<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800"><i class="fas fa-user-tie mr-1"></i> Kepala Dinas</span>',
+            'kepalabidang' => '<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800"><i class="fas fa-user-cog mr-1"></i> Kepala Bidang</span>',
+            'pegawai' => '<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800"><i class="fas fa-user mr-1"></i> Pegawai</span>',
+            'keuangan' => '<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800"><i class="fas fa-coins mr-1"></i> Keuangan</span>'
+        ];
+        
+        return $badges[strtolower($role)] ?? '<span class="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">' . ucfirst($role) . '</span>';
+    }
+}
+
+if (!function_exists('get_role_icon')) {
+    /**
+     * Get role icon (Font Awesome)
+     * 
+     * @param string $role
+     * @return string
+     */
+    function get_role_icon($role)
+    {
+        $icons = [
+            'superadmin' => 'fa-crown',
+            'kepaladinas' => 'fa-user-tie',
+            'kepalabidang' => 'fa-user-cog',
+            'pegawai' => 'fa-user',
+            'keuangan' => 'fa-coins'
+        ];
+        
+        $icon = $icons[strtolower($role)] ?? 'fa-user';
+        
+        return '<i class="fas ' . $icon . '"></i>';
+    }
+}
+
+if (!function_exists('get_activity_icon')) {
+    /**
+     * Get activity icon based on action type
+     * 
+     * @param string $action
+     * @return string
+     */
+    function get_activity_icon($action)
+    {
+        $action_lower = strtolower($action);
+        
+        if (strpos($action_lower, 'login') !== false) {
+            return 'fa-sign-in-alt';
+        } elseif (strpos($action_lower, 'logout') !== false) {
+            return 'fa-sign-out-alt';
+        } elseif (strpos($action_lower, 'create') !== false || strpos($action_lower, 'tambah') !== false) {
+            return 'fa-plus-circle';
+        } elseif (strpos($action_lower, 'update') !== false || strpos($action_lower, 'edit') !== false) {
+            return 'fa-edit';
+        } elseif (strpos($action_lower, 'delete') !== false || strpos($action_lower, 'hapus') !== false) {
+            return 'fa-trash';
+        } elseif (strpos($action_lower, 'approve') !== false || strpos($action_lower, 'setuju') !== false) {
+            return 'fa-check-circle';
+        } elseif (strpos($action_lower, 'reject') !== false || strpos($action_lower, 'tolak') !== false) {
+            return 'fa-times-circle';
+        } elseif (strpos($action_lower, 'submit') !== false) {
+            return 'fa-paper-plane';
+        } elseif (strpos($action_lower, 'verify') !== false || strpos($action_lower, 'verifikasi') !== false) {
+            return 'fa-check-double';
+        } elseif (strpos($action_lower, 'upload') !== false) {
+            return 'fa-upload';
+        } elseif (strpos($action_lower, 'download') !== false) {
+            return 'fa-download';
+        } else {
+            return 'fa-info-circle';
+        }
+    }
+}
+
+if (!function_exists('get_activity_badge_class')) {
+    /**
+     * Get activity badge class based on action type
+     * 
+     * @param string $action
+     * @return string
+     */
+    function get_activity_badge_class($action)
+    {
+        $action_lower = strtolower($action);
+        
+        if (strpos($action_lower, 'login') !== false) {
+            return 'bg-green-100 text-green-800';
+        } elseif (strpos($action_lower, 'logout') !== false) {
+            return 'bg-gray-100 text-gray-800';
+        } elseif (strpos($action_lower, 'create') !== false || strpos($action_lower, 'tambah') !== false) {
+            return 'bg-blue-100 text-blue-800';
+        } elseif (strpos($action_lower, 'update') !== false || strpos($action_lower, 'edit') !== false) {
+            return 'bg-yellow-100 text-yellow-800';
+        } elseif (strpos($action_lower, 'delete') !== false || strpos($action_lower, 'hapus') !== false) {
+            return 'bg-red-100 text-red-800';
+        } elseif (strpos($action_lower, 'approve') !== false || strpos($action_lower, 'setuju') !== false) {
+            return 'bg-green-100 text-green-800';
+        } elseif (strpos($action_lower, 'reject') !== false || strpos($action_lower, 'tolak') !== false) {
+            return 'bg-red-100 text-red-800';
+        } elseif (strpos($action_lower, 'submit') !== false) {
+            return 'bg-indigo-100 text-indigo-800';
+        } elseif (strpos($action_lower, 'verify') !== false || strpos($action_lower, 'verifikasi') !== false) {
+            return 'bg-teal-100 text-teal-800';
+        } else {
+            return 'bg-gray-100 text-gray-800';
+        }
+    }
+}
 }

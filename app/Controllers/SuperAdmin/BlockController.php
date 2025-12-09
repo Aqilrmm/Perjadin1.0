@@ -38,8 +38,8 @@ class BlockController extends BaseController
         $request = $this->request->getPost();
 
         $draw = $request['draw'];
-        $start = $request['start'];
-        $length = $request['length'];
+        $start = isset($request['start']) ? (int) $request['start'] : 0;
+        $length = isset($request['length']) ? (int) $request['length'] : 10;
         $searchValue = $request['search']['value'] ?? '';
 
         // Build query for blocked users
@@ -62,7 +62,7 @@ class BlockController extends BaseController
 
         // Count filtered records
         $totalFiltered = $builder->countAllResults(false);
-        $totalRecords = $this->userModel->where('is_blocked', 1)->countAllResults();
+        $totalRecords = $this->userModel->where('users.is_blocked', 1)->countAllResults();
 
         // Get data
         $data = $builder->orderBy('users.blocked_at', 'DESC')
@@ -265,8 +265,8 @@ class BlockController extends BaseController
      */
     public function statistics()
     {
-        $totalBlocked = $this->userModel->where('is_blocked', 1)->countAllResults();
-        $autoBlocked = $this->userModel->where('is_blocked', 1)
+        $totalBlocked = $this->userModel->where('users.is_blocked', 1)->countAllResults();
+        $autoBlocked = $this->userModel->where('users.is_blocked', 1)
             ->like('blocked_reason', 'Auto-blocked')
             ->countAllResults();
         $manualBlocked = $totalBlocked - $autoBlocked;
@@ -281,14 +281,14 @@ class BlockController extends BaseController
 
         // Blocked by role
         $blockedByRole = $this->userModel->select('role, COUNT(*) as total')
-            ->where('is_blocked', 1)
+            ->where('users.is_blocked', 1)
             ->groupBy('role')
             ->get()
             ->getResult();
 
         // Recent blocks (last 30 days)
-        $recentBlocks = $this->userModel->where('is_blocked', 1)
-            ->where('blocked_at >=', date('Y-m-d', strtotime('-30 days')))
+        $recentBlocks = $this->userModel->where('users.is_blocked', 1)
+            ->where('users.blocked_at >=', date('Y-m-d', strtotime('-30 days')))
             ->countAllResults();
 
         return $this->respondSuccess('Statistics', [

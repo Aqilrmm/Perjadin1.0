@@ -88,8 +88,8 @@ class SecurityLogModel extends BaseModel
     public function getDatatablesData($request)
     {
         $draw = $request['draw'];
-        $start = $request['start'];
-        $length = $request['length'];
+        $start = isset($request['start']) ? (int) $request['start'] : 0;
+        $length = isset($request['length']) ? (int) $request['length'] : 10;
         $searchValue = $request['search']['value'] ?? '';
 
         $totalRecords = $this->countAll();
