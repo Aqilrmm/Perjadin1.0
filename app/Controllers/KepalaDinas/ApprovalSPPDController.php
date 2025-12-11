@@ -74,21 +74,38 @@ class ApprovalSPPDController extends BaseController
         try {
             $sppd = $this->sppdModel->find($id);
             if (!$sppd) {
-                return redirect()->back()->with('error', 'SPPD tidak ditemukan');
+                throw new \Exception('SPPD tidak ditemukan');
             }
 
-            // Set proper headers for PDF display
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: inline; filename="Preview_Nota_Dinas_' . $id . '.pdf"');
+            // Clear any previous output
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+
+            // Set proper headers for PDF
+            $this->response->setHeader('Content-Type', 'application/pdf');
+            $this->response->setHeader('Content-Disposition', 'inline; filename="Preview_Nota_Dinas_' . $id . '.pdf"');
+            $this->response->setHeader('Cache-Control', 'private, max-age=0, must-revalidate');
+            $this->response->setHeader('Pragma', 'public');
             
-            // Generate Nota Dinas PDF and display inline
-            $this->notaDinasGenerator->generate($id, 'I');
-            exit; // Important: stop execution after PDF output
+            // Generate PDF and get binary content
+            $pdfContent = $this->notaDinasGenerator->generate($id, 'S');
+            
+            // Send PDF content
+            return $this->response->setBody($pdfContent);
             
         } catch (\Exception $e) {
             log_message('error', 'Preview SPPD Error: ' . $e->getMessage());
-            echo '<html><body><h3>Error: ' . $e->getMessage() . '</h3></body></html>';
-            exit;
+            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+            
+            // Return HTML error page
+            return $this->response
+                ->setStatusCode(500)
+                ->setHeader('Content-Type', 'text/html')
+                ->setBody(view('errors/pdf_error', [
+                    'message' => $e->getMessage(),
+                    'trace' => ENVIRONMENT === 'development' ? $e->getTraceAsString() : null
+                ]));
         }
     }
 
@@ -177,7 +194,7 @@ class ApprovalSPPDController extends BaseController
             
         } catch (\Exception $e) {
             log_message('error', 'Download Nota Dinas Error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal download nota dinas');
+            return redirect()->back()->with('error', 'Gagal download nota dinas: ' . $e->getMessage());
         }
     }
 

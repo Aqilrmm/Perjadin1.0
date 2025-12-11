@@ -34,17 +34,32 @@
     </div>
 </div>
 
-<!-- Modal Preview PDF -->
+<!-- Modal Preview PDF - IMPROVED -->
 <div id="modal-preview-pdf" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
-    <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[95vh] flex flex-col">
+    <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[95vh] flex flex-col" style="height:1000px">
         <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900">Preview Nota Dinas</h3>
-            <button onclick="closePreviewModal()" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
-            </button>
+            <div class="flex gap-2">
+                <button onclick="refreshPDF()" class="text-blue-600 hover:text-blue-800" title="Refresh">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button onclick="closePreviewModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
         </div>
-        <div class="flex-1 overflow-hidden" style="height: 80vh;">
-            <iframe id="pdf-frame" class="w-full h-full border-0" type="application/pdf"></iframe>
+        <div class="flex-1 overflow-hidden relative" style="height: 80vh;">
+            <!-- Loading indicator -->
+            <div id="pdf-loading" class="absolute inset-0 flex items-center justify-center bg-gray-100">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin text-4xl text-blue-500 mb-2"></i>
+                    <p class="text-gray-600">Loading PDF...</p>
+                </div>
+            </div>
+            <!-- PDF Embed -->
+            <embed id="pdf-embed" class="w-full h-full hidden" type="application/pdf">
+            <!-- Fallback iframe -->
+            <iframe id="pdf-frame" class="w-full h-full border-0 hidden"></iframe>
         </div>
     </div>
 </div>
@@ -53,6 +68,8 @@
 
 <?= $this->section('scripts') ?>
 <script>
+let currentPreviewId = null;
+
 $(function() {
     var table = $('#kd-sppd-table').DataTable({
         processing: true,
@@ -184,20 +201,12 @@ $(function() {
         });
     });
 
-    // Preview PDF
+    // Preview PDF - IMPROVED
     $('#kd-sppd-table').on('click', '.btn-preview', function(e) {
         e.preventDefault();
         var id = $(this).data('id');
-        var previewUrl = '<?= site_url('kepaladinas/sppd/preview') ?>/' + id;
-        
-        // Show loading
-        $('#pdf-frame').attr('src', '');
-        $('#modal-preview-pdf').removeClass('hidden');
-        
-        // Load PDF after modal is shown
-        setTimeout(function() {
-            $('#pdf-frame').attr('src', previewUrl);
-        }, 100);
+        currentPreviewId = id;
+        loadPDF(id);
     });
 
     // Approve
@@ -258,6 +267,39 @@ $(function() {
     });
 });
 
+function loadPDF(id) {
+    var previewUrl = '<?= site_url('kepaladinas/sppd/preview') ?>/' + id;
+    
+    // Show modal with loading
+    $('#modal-preview-pdf').removeClass('hidden');
+    $('#pdf-loading').removeClass('hidden');
+    $('#pdf-embed').addClass('hidden');
+    $('#pdf-frame').addClass('hidden');
+    
+    // Try using embed first (works better in most browsers)
+    var embed = $('#pdf-embed');
+    embed.attr('src', previewUrl);
+    
+    // Handle load
+    setTimeout(function() {
+        $('#pdf-loading').addClass('hidden');
+        embed.removeClass('hidden');
+    }, 500);
+    
+    // Fallback to iframe if embed fails
+    embed.on('error', function() {
+        console.log('Embed failed, trying iframe...');
+        embed.addClass('hidden');
+        $('#pdf-frame').attr('src', previewUrl).removeClass('hidden');
+    });
+}
+
+function refreshPDF() {
+    if (currentPreviewId) {
+        loadPDF(currentPreviewId);
+    }
+}
+
 function formatDate(date) {
     if (!date || date === '0000-00-00') return '-';
     return new Date(date).toLocaleDateString('id-ID', {day: '2-digit', month: 'short', year: 'numeric'});
@@ -269,15 +311,18 @@ function closeDetailModal() {
 
 function closePreviewModal() {
     $('#modal-preview-pdf').addClass('hidden');
+    $('#pdf-embed').attr('src', '');
     $('#pdf-frame').attr('src', '');
+    currentPreviewId = null;
 }
 
 // Close on click outside
 $('#modal-detail-sppd, #modal-preview-pdf').on('click', function(e) {
     if (e.target === this) {
-        $(this).addClass('hidden');
         if (this.id === 'modal-preview-pdf') {
-            $('#pdf-frame').attr('src', '');
+            closePreviewModal();
+        } else {
+            closeDetailModal();
         }
     }
 });
