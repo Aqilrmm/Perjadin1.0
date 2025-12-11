@@ -28,7 +28,7 @@ class SubKegiatanModel extends BaseModel
 
     protected $validationRules = [
         'kegiatan_id' => 'required|numeric',
-        'kode_sub_kegiatan' => 'required|min_length[5]|max_length[50]|is_unique[sub_kegiatan.kode_sub_kegiatan,id,{id}]',
+        'kode_sub_kegiatan' => 'required|is_unique[sub_kegiatan.kode_sub_kegiatan,id,{id}]',
         'nama_sub_kegiatan' => 'required|min_length[10]|max_length[255]',
         'anggaran_sub_kegiatan' => 'required|numeric|greater_than[0]',
     ];

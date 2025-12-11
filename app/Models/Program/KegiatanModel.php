@@ -29,7 +29,7 @@ class KegiatanModel extends BaseModel
 
     protected $validationRules = [
         'program_id' => 'required|numeric',
-        'kode_kegiatan' => 'required|min_length[5]|max_length[50]|is_unique[kegiatan.kode_kegiatan,id,{id}]',
+        'kode_kegiatan' => 'required',
         'nama_kegiatan' => 'required|min_length[10]|max_length[255]',
         'anggaran_kegiatan' => 'required|numeric|greater_than[0]',
     ];

@@ -82,28 +82,7 @@
                 </div>
             </div>
 
-            <!-- Upload Surat Tugas (Optional) -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Upload Surat Tugas (Optional)
-                </label>
-                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-all" id="file-upload-area">
-                    <input type="file" id="file-surat-tugas" name="file_surat_tugas" accept=".pdf,.doc,.docx" class="hidden">
-                    <div id="upload-placeholder">
-                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
-                        <p class="text-sm text-gray-600 mb-1">Klik untuk upload atau drag & drop</p>
-                        <p class="text-xs text-gray-500">PDF, DOC, DOCX (Max. 5MB)</p>
-                    </div>
-                    <div id="file-preview" class="hidden">
-                        <i class="fas fa-file-pdf text-4xl text-red-500 mb-2"></i>
-                        <p class="text-sm text-gray-700 font-medium" id="file-name"></p>
-                        <p class="text-xs text-gray-500" id="file-size"></p>
-                        <button type="button" id="remove-file" class="mt-2 text-xs text-red-600 hover:text-red-800">
-                            <i class="fas fa-times mr-1"></i>Hapus file
-                        </button>
-                    </div>
-                </div>
-            </div>
+            
         </div>
     </form>
 </div>
@@ -250,12 +229,7 @@ $(document).ready(function() {
             $('#char-count').text(length + ' karakter');
 
             // Restore file if exists
-            if (data.file_surat_tugas_name) {
-                $('#upload-placeholder').addClass('hidden');
-                $('#file-preview').removeClass('hidden');
-                $('#file-name').text(data.file_surat_tugas_name);
-                $('#file-size').text(data.file_surat_tugas_size || '');
-            }
+            
         }
     });
 });
