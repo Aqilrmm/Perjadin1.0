@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nota Dinas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            padding: 40px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            padding: 30px 40px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            margin-bottom: 30px;
+            border-bottom: 3px solid #000;
+            padding-bottom: 15px;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        
+        .header-text {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 3px 0;
+        }
+        
+        .header p {
+            font-size: 11px;
+            margin: 2px 0;
+        }
+        
+        .title {
+            text-align: center;
+            margin: 30px 0 30px 0;
+        }
+        
+        .title h2 {
+            font-size: 16px;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+        
+        .nota-info {
+            font-size: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .nota-info table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .nota-info td {
+            padding: 5px;
+            vertical-align: top;
+        }
+        
+        .nota-info td:first-child {
+            width: 150px;
+        }
+        
+        .nota-info td:nth-child(2) {
+            width: 20px;
+        }
+        
+        .content {
+            font-size: 12px;
+            line-height: 1.8;
+            text-align: justify;
+        }
+        
+        .content p {
+            margin-bottom: 15px;
+        }
+        
+        .content ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .content ol li {
+            margin-bottom: 10px;
+        }
+        
+        .signature {
+            margin-top: 40px;
+        }
+        
+        .signature-left {
+            display: inline-block;
+            width: 48%;
+            text-align: center;
+            vertical-align: top;
+        }
+        
+        .signature-right {
+            display: inline-block;
+            width: 48%;
+            text-align: center;
+            vertical-align: top;
+        }
+        
+        .signature-box p {
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        
+        .signature-space {
+            height: 60px;
+        }
+        
+        .signature-box .name {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        
+        .signature-box .nip {
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="logo.png" alt="Logo" class="logo">
+            <div class="header-text">
+                <h1>PEMERINTAH KABUPATEN TANAH BUMBU</h1>
+                <h1>DINAS PENANAMAN MODAL DAN PELAYANAN TERPADU SATU PINTU</h1>
+                <p>Alamat: Jln. Dharma Praja No. 01 Gunung Tinggi Kec. Batulicin Kab. Tanah Bumbu</p>
+                <p>Telp. (0518) 61/0053</p>
+                <p>Laman: https://dpmptsp.tanahbumbukab.go.id</p>
+            </div>
+        </div>
+        
+        <div class="title">
+            <h2>NOTA DINAS</h2>
+        </div>
+        
+        <div class="nota-info">
+            <table>
+                <tr>
+                    <td>Yth</td>
+                    <td>:</td>
+                    <td>Sekretariat Daerah</td>
+                </tr>
+                <tr>
+                    <td>Dari</td>
+                    <td>:</td>
+                    <td>Kepala Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu</td>
+                </tr>
+                <tr>
+                    <td>Nomor</td>
+                    <td>:</td>
+                    <td>B/001.2.3/141/PMPTSP-Sekre./XII/2025</td>
+                </tr>
+                <tr>
+                    <td>Tanggal</td>
+                    <td>:</td>
+                    <td>12 Desember 2025</td>
+                </tr>
+                <tr>
+                    <td>Lampiran</td>
+                    <td>:</td>
+                    <td>1 Berkas</td>
+                </tr>
+                <tr>
+                    <td>Hal</td>
+                    <td>:</td>
+                    <td>Mohon Persetujuan Melakukan Perjalanan Dinas Luar Daerah Provinsi</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="content">
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua:</p>
+            
+            <ol>
+                <li>Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</li>
+                
+                <li>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum.</li>
+                
+                <li>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium totam rem aperiam eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</li>
+                
+                <li>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</li>
+            </ol>
+            
+            <p>Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris.</p>
+        </div>
+        
+        <div class="signature">
+            <div class="signature-left">
+                <div class="signature-box">
+                    <p>Kepala Dinas Penanaman Modal</p>
+                    <p>dan Pelayanan Terpadu Satu Pintu</p>
+                    <div class="signature-space"></div>
+                    <p class="name">Andriano Wirakusno SE., M.Sos</p>
+                    <p class="nip">NIP: 19717223.200312.1.010</p>
+                </div>
+            </div>
+            <div class="signature-right">
+                <div class="signature-box">
+                    <p>Sekretaris Daerah</p>
+                    <div class="signature-space"></div>
+                    <p class="name">Yuiian Herawan, SE., MM, CGCAE, CFTA</p>
+                    <p class="nip">Pembina Utama Muda, I/V/c</p>
+                    <p class="nip">NIP: 19797037.200604.2.042</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
