@@ -269,7 +269,7 @@ class SPPDController extends BaseController
             'tipe_perjalanan' => $this->request->getPost('tipe_perjalanan'),
             'maksud_perjalanan' => $this->request->getPost('maksud_perjalanan'),
             'dasar_surat' => $this->request->getPost('dasar_surat'),
-            // 'alat_angkut' => $this->request->getPost('alat_angkut'),
+            'alat_angkut' => $this->request->getPost('alat_angkut'),
             'tempat_berangkat' => $this->request->getPost('tempat_berangkat'),
             'tempat_tujuan' => $this->request->getPost('tempat_tujuan'),
             'tanggal_berangkat' => $this->request->getPost('tanggal_berangkat'),

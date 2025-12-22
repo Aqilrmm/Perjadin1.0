@@ -6,7 +6,7 @@
         <?= csrf_field() ?>
         
         <div class="space-y-5">
-            <!-- Tipe Perjalanan & Dasar Surat -->
+            <!-- Tipe Perjalanan -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -22,10 +22,57 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Dasar Surat / Nomor Surat <span class="text-red-500">*</span>
+                        Alat Angkut Yang Dipergunakan <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" name="dasar_surat" id="dasar-surat" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 005/SPPD/I/2024" required>
+                    <input type="text" name="alat_angkut" id="alat-angkut" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: Mobil Dinas, Pesawat, Kereta Api" required>
+                    <p class="text-xs text-gray-500 mt-1">Masukkan jenis alat angkut yang akan digunakan</p>
                 </div>
+            </div>
+
+            <!-- Dasar Surat Radio Button -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-3">
+                    Apakah Memiliki Dasar Surat? <span class="text-red-500">*</span>
+                </label>
+                <div class="flex gap-6">
+                    <label class="flex items-center cursor-pointer group">
+                        <input type="radio" name="has_dasar_surat" value="1" class="w-4 h-4 text-blue-600 focus:ring-blue-500 focus:ring-2">
+                        <span class="ml-2 text-sm text-gray-700 group-hover:text-blue-600">Ya, Ada Dasar Surat</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer group">
+                        <input type="radio" name="has_dasar_surat" value="0" class="w-4 h-4 text-blue-600 focus:ring-blue-500 focus:ring-2">
+                        <span class="ml-2 text-sm text-gray-700 group-hover:text-blue-600">Tidak Ada</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Dasar Surat Form (Conditional) -->
+            <div id="dasar-surat-container" class="hidden space-y-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-start mb-2">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-file-alt text-blue-600 text-lg"></i>
+                    </div>
+                    <div class="ml-2">
+                        <h4 class="text-sm font-semibold text-blue-900">Informasi Dasar Surat</h4>
+                        <p class="text-xs text-blue-700 mt-1">Masukkan nomor surat</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Nomor Dasar Surat <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="dasar_surat" id="dasar-surat" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 005/SPPD/I/2024">
+                </div>
+            </div>
+
+            <!-- Kode Rekening -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Kode Rekening <span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="kode_rekening" id="kode-rekening" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Contoh: 5.1.02.01.01.0001" required>
+                <p class="text-xs text-gray-500 mt-1">Masukkan kode rekening sesuai dengan sub kegiatan</p>
             </div>
 
             <!-- Maksud Perjalanan -->
@@ -81,8 +128,6 @@
                     <input type="text" name="tanggal_kembali" id="tanggal-kembali" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50" placeholder="Auto calculated" readonly>
                 </div>
             </div>
-
-            
         </div>
     </form>
 </div>
@@ -99,6 +144,19 @@ $(document).ready(function() {
         locale: 'id',
         onChange: function(selectedDates, dateStr) {
             calculateTanggalKembali();
+        }
+    });
+
+    // Toggle Dasar Surat Form
+    $('input[name="has_dasar_surat"]').on('change', function() {
+        const hasDasarSurat = $(this).val() === '1';
+        
+        if (hasDasarSurat) {
+            $('#dasar-surat-container').stop(true, true).removeClass('hidden').addClass('animate-fade-in');
+            $('#dasar-surat').prop('required', true);
+        } else {
+            $('#dasar-surat-container').stop(true, true).addClass('hidden').removeClass('animate-fade-in');
+            $('#dasar-surat').prop('required', false).val('');
         }
     });
 
@@ -135,80 +193,6 @@ $(document).ready(function() {
         }
     }
 
-    // File upload handling
-    $('#file-upload-area').on('click', function() {
-        if (!$('#file-preview').hasClass('hidden')) return;
-        $('#file-surat-tugas').click();
-    });
-
-    $('#file-upload-area').on('dragover', function(e) {
-        e.preventDefault();
-        $(this).addClass('border-blue-500 bg-blue-50');
-    });
-
-    $('#file-upload-area').on('dragleave', function(e) {
-        e.preventDefault();
-        $(this).removeClass('border-blue-500 bg-blue-50');
-    });
-
-    $('#file-upload-area').on('drop', function(e) {
-        e.preventDefault();
-        $(this).removeClass('border-blue-500 bg-blue-50');
-        
-        const files = e.originalEvent.dataTransfer.files;
-        if (files.length > 0) {
-            handleFileSelect(files[0]);
-        }
-    });
-
-    $('#file-surat-tugas').on('change', function() {
-        if (this.files.length > 0) {
-            handleFileSelect(this.files[0]);
-        }
-    });
-
-    function handleFileSelect(file) {
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-
-        if (!allowedTypes.includes(file.type)) {
-            showToast('Format file tidak didukung. Gunakan PDF, DOC, atau DOCX', 'error');
-            return;
-        }
-
-        if (file.size > maxSize) {
-            showToast('Ukuran file terlalu besar. Maksimal 5MB', 'error');
-            return;
-        }
-
-        // Show preview
-        $('#upload-placeholder').addClass('hidden');
-        $('#file-preview').removeClass('hidden');
-        $('#file-name').text(file.name);
-        $('#file-size').text(formatFileSize(file.size));
-
-        // Update icon based on file type
-        const icon = file.type.includes('pdf') ? 'fa-file-pdf text-red-500' : 'fa-file-word text-blue-500';
-        $('#file-preview i').attr('class', 'fas ' + icon + ' text-4xl mb-2');
-    }
-
-    $('#remove-file').on('click', function(e) {
-        e.stopPropagation();
-        $('#file-surat-tugas').val('');
-        $('#file-preview').addClass('hidden');
-        $('#upload-placeholder').removeClass('hidden');
-    });
-
-    function formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-    }
-
-    
-
     // Restore data on step load
     $(document).on('stepLoaded', function(e, step, data) {
         if (step === 2) {
@@ -228,23 +212,33 @@ $(document).ready(function() {
             const length = $('#maksud-perjalanan').val().length;
             $('#char-count').text(length + ' karakter');
 
-            // Restore file if exists
-            
+            // Trigger dasar surat toggle if data exists
+            if (data.has_dasar_surat) {
+                $(`input[name="has_dasar_surat"][value="${data.has_dasar_surat}"]`).trigger('change');
+            }
         }
     });
 });
 </script>
 
 <style>
-input[type="radio"]:checked + i + span {
-    font-weight: 600;
+input[type="radio"]:checked {
+    background-color: #3B82F6;
+    border-color: #3B82F6;
 }
 
-#file-upload-area {
-    cursor: pointer;
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-in;
 }
 
-#file-upload-area:hover {
-    background-color: #f9fafb;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 </style>

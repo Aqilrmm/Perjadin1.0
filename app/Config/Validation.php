@@ -103,7 +103,7 @@ class Validation extends BaseConfig
             'bidang_id' => 'required|numeric',
             'tipe_perjalanan' => 'required',
             'maksud_perjalanan' => 'required|min_length[20]',
-            'dasar_surat' => 'required',
+            //'dasar_surat' => 'required',
             'alat_angkut' => 'required',
             'tempat_berangkat' => 'required',
             'tempat_tujuan' => 'required',

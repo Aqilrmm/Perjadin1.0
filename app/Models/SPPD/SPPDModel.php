@@ -27,7 +27,7 @@ class SPPDModel extends BaseModel
         'bidang_id' => 'required|numeric',
         'tipe_perjalanan' => 'required',
         'maksud_perjalanan' => 'required|min_length[20]',
-        'dasar_surat' => 'required',
+        //'dasar_surat' => 'required',
         'tempat_berangkat' => 'required',
         'tempat_tujuan' => 'required',
         'tanggal_berangkat' => 'required|valid_date',
