@@ -20,6 +20,7 @@ class UserModel extends BaseModel
         'jabatan',
         'bidang_id',
         'role',
+        'pangkat_golongan',
         'foto',
         'is_active',
         'is_blocked',
@@ -76,6 +77,11 @@ class UserModel extends BaseModel
             $data['data']['uuid'] = $this->generateUUIDD();
         }
         return $data;
+    }
+    public function getKepalaDinas()
+    {
+        return $this->where('role', 'kepaladinas')
+                    ->first();
     }
 
     /**

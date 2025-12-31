@@ -1,6 +1,20 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
 <h1 class="text-xl font-semibold mb-4">Persetujuan SPPD</h1>
+
+<!-- Filter Status (Optional) -->
+<div class="bg-white p-4 rounded shadow mb-4">
+    <div class="flex gap-4 items-center">
+        <label class="text-sm font-medium">Filter Status:</label>
+        <select id="filter_status" class="border rounded px-3 py-2 text-sm">
+            <option value="">Semua Status</option>
+            <option value="pending">Menunggu Persetujuan</option>
+            <option value="approved">Disetujui</option>
+            <option value="rejected">Ditolak</option>
+        </select>
+    </div>
+</div>
+
 <div class="bg-white p-4 rounded shadow">
     <table id="kd-sppd-table" class="min-w-full">
         <thead>
@@ -31,10 +45,35 @@
             </button>
         </div>
         <div id="detail-sppd-content" class="p-6"></div>
+        
+        <!-- Download Section for Approved SPPD -->
+        <div id="detail-download-section" class="hidden border-t border-gray-200 px-6 py-4 bg-gray-50">
+            <h4 class="font-semibold mb-3">Dokumen SPPD</h4>
+            <div class="grid grid-cols-3 gap-3">
+                <a id="download-nota-dinas" href="#" target="_blank" class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>Nota Dinas</span>
+                </a>
+                <a id="download-surat-tugas" href="#" target="_blank" class="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>Surat Tugas</span>
+                </a>
+                <a id="download-spd" href="#" target="_blank" class="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>SPD</span>
+                </a>
+            </div>
+            <div class="mt-3">
+                <a id="download-all" href="#" class="flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800">
+                    <i class="fas fa-file-archive"></i>
+                    <span>Download Semua (ZIP)</span>
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Modal Preview PDF - IMPROVED -->
+<!-- Modal Preview PDF -->
 <div id="modal-preview-pdf" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
     <div class="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[95vh] flex flex-col" style="height:1000px">
         <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -69,6 +108,7 @@
 <?= $this->section('scripts') ?>
 <script>
 let currentPreviewId = null;
+let currentDetailId = null;
 
 $(function() {
     var table = $('#kd-sppd-table').DataTable({
@@ -76,7 +116,12 @@ $(function() {
         serverSide: true,
         ajax: {
             url: '<?= site_url('kepaladinas/sppd/datatable') ?>',
-            type: 'POST'
+            type: 'POST',
+            data: function(d) {
+                d.filters = {
+                    status: $('#filter_status').val()
+                };
+            }
         },
         columns: [
             { data: null, orderable: false, searchable: false },
@@ -105,7 +150,7 @@ $(function() {
             { data: 'jumlah_pegawai', className: 'text-center' },
             { data: 'estimasi_formatted' },
             { data: 'status_badge' },
-            { data: 'action' }
+            { data: 'action', orderable: false, searchable: false }
         ],
         order: [[4, 'desc']],
         createdRow: function(row, data, dataIndex) {
@@ -114,9 +159,16 @@ $(function() {
         }
     });
 
+    // Filter Status
+    $('#filter_status').on('change', function() {
+        table.ajax.reload();
+    });
+
     // Detail
     $('#kd-sppd-table').on('click', '.btn-detail', function() {
         var id = $(this).data('id');
+        currentDetailId = id;
+        
         $.get('<?= site_url('kepaladinas/sppd/detail') ?>/' + id, function(res) {
             if (res.status) {
                 var sppd = res.data.sppd;
@@ -192,6 +244,18 @@ $(function() {
                 html += '</div>';
                 
                 $('#detail-sppd-content').html(html);
+                
+                // Show download section if approved
+                if (sppd.status === 'approved') {
+                    $('#download-nota-dinas').attr('href', '<?= site_url('kepaladinas/sppd/download-nota-dinas') ?>/' + id);
+                    $('#download-surat-tugas').attr('href', '<?= site_url('kepaladinas/sppd/download-surat-tugas') ?>/' + id);
+                    $('#download-spd').attr('href', '<?= site_url('kepaladinas/sppd/download-spd') ?>/' + id);
+                    $('#download-all').attr('href', '<?= site_url('kepaladinas/sppd/download-all') ?>/' + id);
+                    $('#detail-download-section').removeClass('hidden');
+                } else {
+                    $('#detail-download-section').addClass('hidden');
+                }
+                
                 $('#modal-detail-sppd').removeClass('hidden');
             } else {
                 Swal.fire('Error', res.message || 'Gagal memuat detail', 'error');
@@ -201,7 +265,7 @@ $(function() {
         });
     });
 
-    // Preview PDF - IMPROVED
+    // Preview PDF
     $('#kd-sppd-table').on('click', '.btn-preview', function(e) {
         e.preventDefault();
         var id = $(this).data('id');
@@ -214,11 +278,19 @@ $(function() {
         var id = $(this).data('id');
         Swal.fire({
             title: 'Setujui SPPD?',
-            text: 'Nomor SPPD akan digenerate otomatis',
+            html: '<p class="mb-2">Dengan menyetujui, sistem akan otomatis menggenerate:</p>' +
+                  '<ul class="list-disc list-inside text-left text-sm">' +
+                  '<li>Nomor SPPD</li>' +
+                  '<li>Nota Dinas</li>' +
+                  '<li>Surat Tugas</li>' +
+                  '<li>Surat Perjalanan Dinas</li>' +
+                  '</ul>',
             input: 'textarea',
             inputPlaceholder: 'Catatan (opsional)',
             showCancelButton: true,
             confirmButtonText: 'Ya, Setujui',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#10b981',
             showLoaderOnConfirm: true,
             preConfirm: (catatan) => {
                 return $.post('<?= site_url('kepaladinas/sppd/approve') ?>/' + id, {catatan: catatan})
@@ -229,7 +301,23 @@ $(function() {
             }
         }).then(function(result) {
             if (result.isConfirmed && result.value?.status) {
-                Swal.fire('Berhasil', 'SPPD disetujui dengan nomor: ' + result.value.data?.no_sppd, 'success');
+                var docs = result.value.data?.documents;
+                var message = 'SPPD disetujui dengan nomor: ' + result.value.data?.no_sppd;
+                
+                if (docs) {
+                    message += '<br><br><small class="text-sm">Dokumen berhasil digenerate:</small>';
+                    message += '<ul class="list-disc list-inside text-left text-sm mt-2">';
+                    if (docs.nota_dinas) message += '<li>Nota Dinas</li>';
+                    if (docs.surat_tugas) message += '<li>Surat Tugas</li>';
+                    if (docs.spd) message += '<li>Surat Perjalanan Dinas</li>';
+                    message += '</ul>';
+                }
+                
+                Swal.fire({
+                    title: 'Berhasil!',
+                    html: message,
+                    icon: 'success'
+                });
                 table.ajax.reload();
             }
         });
@@ -244,6 +332,7 @@ $(function() {
             inputPlaceholder: 'Alasan penolakan (min 10 karakter)',
             showCancelButton: true,
             confirmButtonText: 'Tolak',
+            cancelButtonText: 'Batal',
             confirmButtonColor: '#ef4444',
             inputValidator: (value) => {
                 if (!value || value.length < 10) {
@@ -261,6 +350,33 @@ $(function() {
         }).then(function(result) {
             if (result.isConfirmed && result.value?.status) {
                 Swal.fire('Berhasil', result.value.message, 'success');
+                table.ajax.reload();
+            }
+        });
+    });
+
+    // Regenerate Documents
+    $('#kd-sppd-table').on('click', '.btn-regenerate', function() {
+        var id = $(this).data('id');
+        Swal.fire({
+            title: 'Regenerate Dokumen?',
+            text: 'Dokumen lama akan ditimpa dengan dokumen baru',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Regenerate',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#f59e0b',
+            showLoaderOnConfirm: true,
+            preConfirm: () => {
+                return $.post('<?= site_url('kepaladinas/sppd/regenerate') ?>/' + id)
+                    .then(res => res)
+                    .catch(err => {
+                        Swal.showValidationMessage('Error: ' + (err.responseJSON?.message || err.statusText));
+                    });
+            }
+        }).then(function(result) {
+            if (result.isConfirmed && result.value?.status) {
+                Swal.fire('Berhasil', 'Dokumen berhasil digenerate ulang', 'success');
                 table.ajax.reload();
             }
         });
@@ -307,6 +423,7 @@ function formatDate(date) {
 
 function closeDetailModal() {
     $('#modal-detail-sppd').addClass('hidden');
+    currentDetailId = null;
 }
 
 function closePreviewModal() {
@@ -326,5 +443,25 @@ $('#modal-detail-sppd, #modal-preview-pdf').on('click', function(e) {
         }
     }
 });
+
+// Dropdown toggle function (for inline download menu in table)
+function toggleDropdown(id) {
+    // Close all other dropdowns
+    $('[id^="dropdown-"]').not('#dropdown-' + id).addClass('hidden');
+    
+    // Toggle current dropdown
+    var dropdown = $('#dropdown-' + id);
+    dropdown.toggleClass('hidden');
+    
+    // Close dropdown when clicking outside
+    if (!dropdown.hasClass('hidden')) {
+        $(document).one('click', function(e) {
+            if (!$(e.target).closest('#dropdown-' + id).length && 
+                !$(e.target).closest('button[onclick*="toggleDropdown(' + id + ')"]').length) {
+                dropdown.addClass('hidden');
+            }
+        });
+    }
+}
 </script>
 <?= $this->endSection() ?>

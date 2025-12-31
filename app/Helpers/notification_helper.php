@@ -6,6 +6,8 @@
  * Helper functions for notifications and alerts
  */
 
+
+
 if (!function_exists('send_notification')) {
     /**
      * Send notification to user
@@ -477,5 +479,227 @@ if (!function_exists('send_email_notification')) {
         $email->setMessage($message);
         
         return $email->send();
+    }
+    
+}
+
+/**
+ * SPPD Notification Helper Functions
+ * 
+ * Add these functions to app/Helpers/notification_helper.php
+ */
+
+if (!function_exists('notify_sppd_approved')) {
+    /**
+     * Send notification when SPPD is approved
+     * 
+     * @param int $sppdId
+     * @return bool
+     */
+    function notify_sppd_approved(int $sppdId): bool
+    {
+        try {
+            $sppdModel = new \App\Models\SPPD\SPPDModel();
+            $sppdPegawaiModel = new \App\Models\SPPD\SPPDPegawaiModel();
+            $notificationModel = new \App\Models\Notification\NotificationModel();
+
+            $sppd = $sppdModel->getWithRelations($sppdId);
+            if (!$sppd) {
+                return false;
+            }
+
+            // Get all pegawai in this SPPD
+            $pegawaiList = $sppdPegawaiModel->getPegawaiBySppdId($sppdId);
+
+            $message = "SPPD dengan nomor {$sppd['no_sppd']} telah disetujui. Dokumen Nota Dinas, Surat Tugas, dan Surat Perjalanan Dinas telah tersedia untuk didownload.";
+
+            // Notify creator
+            $notificationModel->insert([
+                'user_id' => $sppd['created_by'],
+                'title' => 'SPPD Disetujui',
+                'message' => $message,
+                'type' => 'sppd_approved',
+                'reference_id' => $sppdId,
+                'reference_type' => 'sppd',
+                'is_read' => 0
+            ]);
+
+            // Notify all pegawai
+            foreach ($pegawaiList as $pegawai) {
+                if ($pegawai['id'] != $sppd['created_by']) {
+                    $notificationModel->insert([
+                        'user_id' => $pegawai['id'],
+                        'title' => 'SPPD Disetujui',
+                        'message' => $message,
+                        'type' => 'sppd_approved',
+                        'reference_id' => $sppdId,
+                        'reference_type' => 'sppd',
+                        'is_read' => 0
+                    ]);
+                }
+            }
+
+            // Send email notification (optional)
+            // notify_via_email($sppd['created_by'], 'SPPD Disetujui', $message);
+
+            return true;
+
+        } catch (\Exception $e) {
+            log_message('error', 'Notification Error: ' . $e->getMessage());
+            return false;
+        }
+    }
+}
+
+if (!function_exists('notify_sppd_rejected')) {
+    /**
+     * Send notification when SPPD is rejected
+     * 
+     * @param int $sppdId
+     * @return bool
+     */
+    function notify_sppd_rejected(int $sppdId): bool
+    {
+        try {
+            $sppdModel = new \App\Models\SPPD\SPPDModel();
+            $notificationModel = new \App\Models\Notification\NotificationModel();
+
+            $sppd = $sppdModel->getWithRelations($sppdId);
+            if (!$sppd) {
+                return false;
+            }
+
+            $message = "SPPD Anda untuk tujuan {$sppd['tempat_tujuan']} telah ditolak.";
+            if (!empty($sppd['catatan_kepala_dinas'])) {
+                $message .= " Catatan: {$sppd['catatan_kepala_dinas']}";
+            }
+
+            // Notify creator
+            $notificationModel->insert([
+                'user_id' => $sppd['created_by'],
+                'title' => 'SPPD Ditolak',
+                'message' => $message,
+                'type' => 'sppd_rejected',
+                'reference_id' => $sppdId,
+                'reference_type' => 'sppd',
+                'is_read' => 0
+            ]);
+
+            return true;
+
+        } catch (\Exception $e) {
+            log_message('error', 'Notification Error: ' . $e->getMessage());
+            return false;
+        }
+    }
+}
+
+if (!function_exists('get_sppd_status_badge')) {
+    /**
+     * Get HTML badge for SPPD status
+     * 
+     * @param string $status
+     * @return string
+     */
+    function get_sppd_status_badge(string $status): string
+    {
+        $badges = [
+            'draft' => '<span class="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-800">Draft</span>',
+            'pending' => '<span class="px-2 py-1 text-xs rounded-full bg-yellow-200 text-yellow-800">Menunggu Persetujuan</span>',
+            'approved' => '<span class="px-2 py-1 text-xs rounded-full bg-green-200 text-green-800">Disetujui</span>',
+            'rejected' => '<span class="px-2 py-1 text-xs rounded-full bg-red-200 text-red-800">Ditolak</span>',
+            'submitted' => '<span class="px-2 py-1 text-xs rounded-full bg-blue-200 text-blue-800">Disubmit ke Keuangan</span>',
+            'verified' => '<span class="px-2 py-1 text-xs rounded-full bg-purple-200 text-purple-800">Terverifikasi</span>',
+            'need_revision' => '<span class="px-2 py-1 text-xs rounded-full bg-orange-200 text-orange-800">Perlu Revisi</span>',
+            'closed' => '<span class="px-2 py-1 text-xs rounded-full bg-gray-400 text-white">Selesai</span>',
+        ];
+
+        return $badges[$status] ?? '<span class="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-800">' . ucfirst($status) . '</span>';
+    }
+}
+
+if (!function_exists('get_tipe_perjalanan_badge')) {
+    /**
+     * Get HTML badge for tipe perjalanan
+     * 
+     * @param string $tipe
+     * @return string
+     */
+    function get_tipe_perjalanan_badge(string $tipe): string
+    {
+        $badges = [
+            'Dalam Daerah' => '<span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Dalam Daerah</span>',
+            'Luar Daerah Dalam Provinsi' => '<span class="px-2 py-1 text-xs rounded-full bg-indigo-100 text-indigo-800">Luar Daerah Dalam Provinsi</span>',
+            'Luar Daerah Luar Provinsi' => '<span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">Luar Daerah Luar Provinsi</span>',
+        ];
+
+        return $badges[$tipe] ?? '<span class="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-800">' . $tipe . '</span>';
+    }
+}
+
+if (!function_exists('format_rupiah')) {
+    /**
+     * Format number to Rupiah currency
+     * 
+     * @param float $amount
+     * @return string
+     */
+    function format_rupiah($amount): string
+    {
+        return 'Rp ' . number_format($amount, 0, ',', '.');
+    }
+}
+
+if (!function_exists('format_tanggal')) {
+    /**
+     * Format date to Indonesian format
+     * 
+     * @param string $date
+     * @param bool $includeTime
+     * @return string
+     */
+    function format_tanggal($date, bool $includeTime = false): string
+    {
+        if (empty($date) || $date === '0000-00-00' || $date === '0000-00-00 00:00:00') {
+            return '-';
+        }
+
+        $timestamp = strtotime($date);
+        if ($timestamp === false) {
+            return '-';
+        }
+
+        $months = [
+            1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ];
+
+        $formatted = date('d', $timestamp) . ' ' . 
+                    $months[(int)date('n', $timestamp)] . ' ' . 
+                    date('Y', $timestamp);
+
+        if ($includeTime) {
+            $formatted .= ' ' . date('H:i', $timestamp);
+        }
+
+        return $formatted;
+    }
+}
+
+if (!function_exists('bulan_romawi')) {
+    /**
+     * Convert month number to Roman numeral
+     * 
+     * @param int $bulan
+     * @return string
+     */
+    function bulan_romawi(int $bulan): string
+    {
+        $romawi = [
+            1 => 'I', 'II', 'III', 'IV', 'V', 'VI',
+            'VII', 'VIII', 'IX', 'X', 'XI', 'XII'
+        ];
+
+        return $romawi[$bulan] ?? '';
     }
 }

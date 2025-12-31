@@ -24,6 +24,10 @@
                     <label>Gelar Belakang</label>
                     <input name="gelar_belakang" class="w-full border p-2 rounded">
                 </div>
+                <div>
+                    <label>Pangkat/Golongan</label>
+                    <input name="pangkat_golongan" class="w-full border p-2 rounded">
+                </div>
 
                 <div>
                     <label>Email*</label>

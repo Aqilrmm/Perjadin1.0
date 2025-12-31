@@ -121,6 +121,33 @@ $routes->group('kepaladinas', ['filter' => 'auth:kepaladinas'], function ($route
     $routes->get('analytics', 'KepalaDinas\AnalyticsController::index');
 });
 
+// ========================================
+// KEPALA DINAS - SPPD APPROVAL ROUTES
+// ========================================
+
+$routes->group('kepaladinas/sppd', ['namespace' => 'App\Controllers\KepalaDinas', 'filter' => 'auth'], function($routes) {
+    // Main routes
+    $routes->get('/', 'ApprovalSPPDController::index');
+    $routes->post('datatable', 'ApprovalSPPDController::datatable');
+    $routes->post('detail/(:num)', 'ApprovalSPPDController::detail/$1');
+    
+    // Preview
+    $routes->get('preview/(:num)', 'ApprovalSPPDController::preview/$1');
+    
+    // Approval actions
+    $routes->post('approve/(:num)', 'ApprovalSPPDController::approve/$1');
+    $routes->post('reject/(:num)', 'ApprovalSPPDController::reject/$1');
+    
+    // Download documents
+    $routes->get('download-nota-dinas/(:num)', 'ApprovalSPPDController::downloadNotaDinas/$1');
+    $routes->get('download-surat-tugas/(:num)', 'ApprovalSPPDController::downloadSuratTugas/$1');
+    $routes->get('download-spd/(:num)', 'ApprovalSPPDController::downloadSPD/$1');
+    $routes->get('download-all/(:num)', 'ApprovalSPPDController::downloadAllDocuments/$1');
+    
+    // Regenerate documents
+    $routes->post('regenerate/(:num)', 'ApprovalSPPDController::regenerateDocuments/$1');
+});
+
 // Kepala Bidang Routes
 $routes->group('kepalabidang', ['filter' => 'auth:kepalabidang'], function ($routes) {
     $routes->get('dashboard', 'KepalaBidang\DashboardController::index');
@@ -182,9 +209,11 @@ $routes->group('kepalabidang', ['filter' => 'auth:kepalabidang'], function ($rou
 $routes->group('pegawai', ['filter' => 'auth:pegawai'], function ($routes) {
     $routes->get('dashboard', 'Pegawai\DashboardController::index');
 
+
     // My SPPD
     $routes->group('sppd', function ($routes) {
         $routes->get('/', 'Pegawai\MySPPDController::index');
+        $routes->post('datatable', 'Pegawai\MySPPDController::datatable');
         $routes->get('detail/(:num)', 'Pegawai\MySPPDController::detail/$1');
     });
 

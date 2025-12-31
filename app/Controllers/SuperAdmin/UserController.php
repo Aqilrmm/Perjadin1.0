@@ -100,6 +100,7 @@ class UserController extends BaseController
             'gelar_belakang' => $this->request->getPost('gelar_belakang'),
             'jenis_pegawai' => $this->request->getPost('jenis_pegawai'),
             'email' => $this->request->getPost('email'),
+            'pangkat_golongan' => $this->request->getPost('pangkat_golongan'),
             'password' => $this->request->getPost('password'),
             'jabatan' => $this->request->getPost('jabatan'),
             'bidang_id' => $this->request->getPost('bidang_id'),

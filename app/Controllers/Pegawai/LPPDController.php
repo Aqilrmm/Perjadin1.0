@@ -77,6 +77,7 @@ class LPPDController extends BaseController
             'saran' => $this->request->getPost('saran'),
             'tanggal_pengisian' => date('Y-m-d'),
             'is_submitted' => 0,
+        'status' => 'submitted',
         ];
 
         // Handle dokumentasi upload

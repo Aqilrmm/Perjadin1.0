@@ -11,8 +11,8 @@
         <h1 class="text-2xl font-bold text-gray-800">Verifikasi SPPD</h1>
     </div>
     <div class="flex items-center gap-3">
-        <span class="text-gray-600"><?= esc($sppd->no_sppd ?? '') ?></span>
-        <span><?= get_sppd_status_badge($sppd->status ?? '') ?></span>
+        <span class="text-gray-600"><?= esc($sppd['no_sppd'] ?? '') ?></span>
+        <span><?= get_sppd_status_badge($sppd['status'] ?? '') ?></span>
     </div>
 </div>
 
@@ -54,53 +54,53 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="text-sm font-medium text-gray-700">No SPPD</label>
-                                <p class="text-gray-900 mt-1"><?= esc($sppd->no_sppd ?? '-') ?></p>
+                                <p class="text-gray-900 mt-1"><?= esc($sppd['no_sppd'] ?? '-') ?></p>
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-gray-700">Bidang</label>
-                                <p class="text-gray-900 mt-1"><?= esc($sppd->nama_bidang ?? '-') ?></p>
+                                <p class="text-gray-900 mt-1"><?= esc($sppd['nama_bidang'] ?? '-') ?></p>
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-gray-700">Tipe Perjalanan</label>
-                                <p class="text-gray-900 mt-1"><?= esc($sppd->tipe_perjalanan ?? '-') ?></p>
+                                <p class="text-gray-900 mt-1"><?= esc($sppd['tipe_perjalanan'] ?? '-') ?></p>
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-gray-700">Lama Perjalanan</label>
-                                <p class="text-gray-900 mt-1"><?= esc($sppd->lama_perjalanan ?? '0') ?> Hari</p>
+                                <p class="text-gray-900 mt-1"><?= esc($sppd['lama_perjalanan'] ?? '0') ?> Hari</p>
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-gray-700">Tanggal Berangkat</label>
-                                <p class="text-gray-900 mt-1"><?= format_tanggal($sppd->tanggal_berangkat ?? '') ?></p>
+                                <p class="text-gray-900 mt-1"><?= format_tanggal($sppd['tanggal_berangkat'] ?? '') ?></p>
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-gray-700">Tanggal Kembali</label>
-                                <p class="text-gray-900 mt-1"><?= format_tanggal($sppd->tanggal_kembali ?? '') ?></p>
+                                <p class="text-gray-900 mt-1"><?= format_tanggal($sppd['tanggal_kembali'] ?? '') ?></p>
                             </div>
                         </div>
                         <div>
                             <label class="text-sm font-medium text-gray-700">Maksud Perjalanan</label>
-                            <p class="text-gray-900 mt-1"><?= esc($sppd->maksud_perjalanan ?? '-') ?></p>
+                            <p class="text-gray-900 mt-1"><?= esc($sppd['maksud_perjalanan'] ?? '-') ?></p>
                         </div>
                         <div>
                             <label class="text-sm font-medium text-gray-700">Tempat Tujuan</label>
-                            <p class="text-gray-900 mt-1"><?= esc($sppd->tempat_tujuan ?? '-') ?></p>
+                            <p class="text-gray-900 mt-1"><?= esc($sppd['tempat_tujuan'] ?? '-') ?></p>
                         </div>
                         <div>
                             <label class="text-sm font-medium text-gray-700">Estimasi Biaya</label>
-                            <p class="text-2xl font-bold text-blue-600 mt-1"><?= format_rupiah($sppd->estimasi_biaya ?? 0) ?></p>
+                            <p class="text-2xl font-bold text-blue-600 mt-1"><?= format_rupiah($sppd['estimasi_biaya'] ?? 0) ?></p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Nota Dinas Tab -->
                 <div id="tab-nota" class="tab-content hidden">
-                    <?php if (!empty($sppd->file_nota_dinas)): ?>
+                    <?php if (!empty($sppd['file_nota_dinas'])): ?>
                         <div class="border rounded-lg overflow-hidden">
-                            <iframe src="<?= base_url('uploads/nota_dinas/' . $sppd->file_nota_dinas) ?>" 
+                            <iframe src="<?= base_url('uploads/nota_dinas/' . $sppd['file_nota_dinas']) ?>" 
                                     class="w-full h-[600px]"></iframe>
                         </div>
                         <div class="mt-4">
-                            <a href="<?= base_url('kepaladinas/sppd/download-nota-dinas/' . $sppd->id) ?>" 
+                            <a href="<?= base_url('kepaladinas/sppd/download-nota-dinas/' . $sppd['id']) ?>" 
                                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                                 <i class="fas fa-download mr-2"></i> Download Nota Dinas
                             </a>
@@ -274,15 +274,15 @@
             <div class="space-y-3">
                 <?php foreach ($pegawai_list as $pegawai): ?>
                 <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <img src="<?= get_user_avatar($pegawai->user_id ?? 0) ?>" 
+                    <img src="<?= get_user_avatar($pegawai['user_id'] ?? 0) ?>" 
                          alt="Avatar"
                          class="w-10 h-10 rounded-full object-cover">
                     <div class="flex-1">
-                        <p class="font-medium text-gray-900"><?= esc($pegawai->nama ?? '-') ?></p>
-                        <p class="text-sm text-gray-600"><?= esc($pegawai->nip ?? '-') ?></p>
+                        <p class="font-medium text-gray-900"><?= esc($pegawai['nama'] ?? '-') ?></p>
+                        <p class="text-sm text-gray-600"><?= esc($pegawai['nip'] ?? '-') ?></p>
                     </div>
                     <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                        <?= esc($pegawai->nama_bidang ?? '-') ?>
+                        <?= esc($pegawai['nama_bidang'] ?? '-') ?>
                     </span>
                 </div>
                 <?php endforeach; ?>
@@ -298,7 +298,7 @@
                 Verifikasi
             </h3>
 
-            <?php if ($sppd->status === 'submitted'): ?>
+            <?php if (($sppd['status'] ?? '') === 'submitted'): ?>
             <form id="form-verification" method="post">
                 <?= csrf_field() ?>
 
@@ -364,7 +364,7 @@
                     <i class="fas fa-info-circle text-2xl text-gray-400"></i>
                 </div>
                 <p class="text-gray-600 mb-2">SPPD ini sudah diverifikasi</p>
-                <span><?= get_sppd_status_badge($sppd->status) ?></span>
+                <span><?= get_sppd_status_badge($sppd['status'] ?? '') ?></span>
             </div>
             <?php endif; ?>
         </div>
@@ -468,8 +468,8 @@ $(document).ready(function() {
         }
         
         const url = action === 'approve' 
-            ? '<?= base_url('keuangan/verifikasi/approve/' . $sppd->id) ?>'
-            : '<?= base_url('keuangan/verifikasi/reject/' . $sppd->id) ?>';
+            ? '<?= base_url('keuangan/verifikasi/approve/' . ($sppd['id'] ?? '')) ?>'
+            : '<?= base_url('keuangan/verifikasi/reject/' . ($sppd['id'] ?? '')) ?>';
         
         axios.post(url, formData)
             .then(response => {

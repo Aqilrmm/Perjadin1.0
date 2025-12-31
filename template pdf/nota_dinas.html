@@ -11,19 +11,19 @@
             box-sizing: border-box;
         }
         
-        body {
+        /* body {
             font-family: 'Times New Roman', Times, serif;
-            padding: 40px;
+            padding: auto;
             background: #f5f5f5;
         }
-        
-        .container {
+         */
+        /* .container {
             max-width: 210mm;
             margin: 0 auto;
             background: white;
             padding: 30px 40px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
+        } */
         
         .header {
             margin-bottom: 30px;
@@ -113,20 +113,13 @@
         
         .signature {
             margin-top: 40px;
+            text-align: right;
         }
         
-        .signature-left {
+        .signature-box {
             display: inline-block;
-            width: 48%;
             text-align: center;
-            vertical-align: top;
-        }
-        
-        .signature-right {
-            display: inline-block;
-            width: 48%;
-            text-align: center;
-            vertical-align: top;
+            min-width: 250px;
         }
         
         .signature-box p {
@@ -146,6 +139,55 @@
         .signature-box .nip {
             font-size: 11px;
         }
+        .table-detail {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 12px;
+}
+
+.table-detail td {
+    border: 1px solid #000;
+    padding: 6px 8px;
+    vertical-align: top;
+}
+
+.table-detail td.no {
+    width: 30px;
+    text-align: center;
+}
+
+.table-detail td.label {
+    width: 200px;
+}
+
+.table-detail td.isi {
+    text-align: left;
+}
+
+     .table-pegawai {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 12px;
+}
+
+.table-pegawai th,
+.table-pegawai td {
+    border: 1px solid #000;
+    padding: 6px 8px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table-pegawai th {
+    font-weight: bold;
+}
+
+.table-pegawai td:nth-child(2) {
+    text-align: left; /* Nama rata kiri */
+}
+
     </style>
 </head>
 <body>
@@ -178,14 +220,24 @@
                     <td>Kepala Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu</td>
                 </tr>
                 <tr>
-                    <td>Nomor</td>
+                    <td>Tembusan</td>
                     <td>:</td>
-                    <td>B/001.2.3/141/PMPTSP-Sekre./XII/2025</td>
+                    <td>-</td>
                 </tr>
                 <tr>
                     <td>Tanggal</td>
                     <td>:</td>
                     <td>12 Desember 2025</td>
+                </tr>
+                <tr>
+                    <td>Nomor</td>
+                    <td>:</td>
+                    <td>B/001.2.3/141/PMPTSP-Sekre./XII/2025</td>
+                </tr>
+                <tr>
+                    <td>Sifat</td>
+                    <td>:</td>
+                    <td>Biasa</td>
                 </tr>
                 <tr>
                     <td>Lampiran</td>
@@ -202,40 +254,93 @@
         
         <div class="content">
             <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua:</p>
+                 <table class="table-pegawai">
+    <thead>
+        <tr>
+            <th>No</th>
+            <th>Nama</th>
+            <th>NIP</th>
+            <th>Jabatan</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1.</td>
+            <td>Andriano Wirakusno, SE., M.Sos</td>
+            <td>19717223.200312.1.010</td>
+            <td>Kepala Dinas</td>
+        </tr>
+    </tbody>
+</table>
+
+   <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua:</p>
+                
             
-            <ol>
-                <li>Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</li>
+            <table class="table-detail">
+
                 
-                <li>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum.</li>
-                
-                <li>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium totam rem aperiam eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</li>
-                
-                <li>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</li>
-            </ol>
+    <tr>
+        <td class="label">Keperluan</td>
+        <td class="no">:</td>
+        <td class="isi">Lorem ipsum dolor sit amet consectetur</td>
+    </tr>
+    <tr>
+        <td class="label">Tempat Tujuan</td>
+        <td class="no">:</td>
+        <td class="isi">Lorem</td>
+    </tr>
+    <tr>
+        <td class="label">Berlaku Mulai Tanggal</td>
+        <td class="no">:</td>
+        <td class="isi">26 Februari 2025</td>
+    </tr>
+    <tr>
+        <td class="label">Alat Transportasi</td>
+        <td class="no">:</td>
+        <td class="isi">Lorem</td>
+    </tr>
+    <tr>
+        <td class="label">Pembebanan Biaya ST</td>
+        <td class="no">:</td>
+        <td class="isi">Lorem</td>
+    </tr>
+   
+</table>
+          
             
-            <p>Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris.</p>
+           
+<p>Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris.</p>
         </div>
-        
-        <div class="signature">
-            <div class="signature-left">
-                <div class="signature-box">
-                    <p>Kepala Dinas Penanaman Modal</p>
-                    <p>dan Pelayanan Terpadu Satu Pintu</p>
-                    <div class="signature-space"></div>
-                    <p class="name">Andriano Wirakusno SE., M.Sos</p>
-                    <p class="nip">NIP: 19717223.200312.1.010</p>
-                </div>
-            </div>
-            <div class="signature-right">
-                <div class="signature-box">
-                    <p>Sekretaris Daerah</p>
-                    <div class="signature-space"></div>
-                    <p class="name">Yuiian Herawan, SE., MM, CGCAE, CFTA</p>
-                    <p class="nip">Pembina Utama Muda, I/V/c</p>
-                    <p class="nip">NIP: 19797037.200604.2.042</p>
-                </div>
+         
+         <div class="signature">
+            <div class="signature-box">
+                <p>Tanah Bumbu, 01 Desember 2025</p>
+                <p>Kepala Dinas</p>
+                <div class="signature-space"></div>
+                <p class="name">Andriano Wirakusno, SE., M.Sos</p>
+                <p class="nip">NIP: 19717223.200312.1.010</p>
             </div>
         </div>
+<small>Disposisi:</small>
+        <table class="table-pegawai">
+    <thead>
+        <tr>
+            <!-- <th>No</th> -->
+            <th>Assisten Administrasi Umum</th>
+            <th>Sekretaris Daerah</th>
+            <!-- <th>Jabatan</th> -->
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <!-- <td>1.</td> -->
+            <td>barcode</td>
+            <td>barcode</td>
+            <!-- <td>Kepala Dinas</td> -->
+        </tr>
+    </tbody>
+</table>
+
     </div>
 </body>
 </html>

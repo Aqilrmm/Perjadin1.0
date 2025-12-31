@@ -57,6 +57,16 @@ class SubKegiatanModel extends BaseModel
             mt_rand(0, 0xffff)
         );
     }
+    public function getWithRelationss($id)
+    {
+        return $this->select('sub_kegiatan.*, 
+                              kegiatan.nama_kegiatan, kegiatan.kode_kegiatan,
+                              programs.nama_program, programs.kode_program')
+            ->join('kegiatan', 'kegiatan.id = sub_kegiatan.kegiatan_id', 'left')
+            ->join('programs', 'programs.id = kegiatan.program_id', 'left')
+            ->where('sub_kegiatan.id', $id)
+            ->first();
+    }
 
     /**
      * Get sub kegiatan with relations

@@ -11,7 +11,7 @@
 <!-- Page Header -->
 <div class="mb-6">
     <h1 class="text-2xl font-bold text-gray-900">Laporan Pelaksanaan Perjalanan Dinas (LPPD)</h1>
-    <p class="text-gray-600 mt-1">SPPD: <?= esc($sppd['nomor_sppd'] ?? 'Draft') ?> - <?= esc($sppd['tujuan']) ?></p>
+    <p class="text-gray-600 mt-1">SPPD: <?= esc($sppd['no_sppd'] ?? $sppd['nomor_sppd'] ?? 'Draft') ?> - <?= esc($sppd['tempat_tujuan'] ?? '-') ?></p>
 </div>
 
 <!-- SPPD Info Card -->
@@ -21,7 +21,7 @@
         <div>
             <p class="font-semibold text-blue-800">Informasi SPPD</p>
             <div class="text-sm text-blue-700 mt-2 space-y-1">
-                <p><strong>Tujuan:</strong> <?= esc($sppd['tujuan']) ?></p>
+                <p><strong>Tujuan:</strong> <?= esc($sppd['tempat_tujuan'] ?? '-') ?></p>
                 <p><strong>Tanggal:</strong> <?= format_tanggal($sppd['tanggal_berangkat']) ?> s/d <?= format_tanggal($sppd['tanggal_kembali']) ?></p>
                 <p><strong>Lama Perjalanan:</strong> <?= $sppd['lama_perjalanan'] ?> hari</p>
             </div>
@@ -48,7 +48,7 @@
                     class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Jelaskan secara detail hasil/output dari perjalanan dinas ini... (minimal 50 karakter)"
                     required
-                    minlength="50"><?= $lppd['hasil_kegiatan'] ?? '' ?></textarea>
+                    minlength="50"><?= isset($lppd['hasil_kegiatan']) ? esc($lppd['hasil_kegiatan']) : '' ?></textarea>
                 <div class="flex justify-between mt-1">
                     <p class="text-xs text-gray-500">
                         <i class="fas fa-info-circle mr-1"></i>
@@ -68,7 +68,7 @@
                     name="hambatan" 
                     rows="4" 
                     class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Jelaskan hambatan atau kendala yang dihadapi (jika ada)..."><?= $lppd['hambatan'] ?? '' ?></textarea>
+                    placeholder="Jelaskan hambatan atau kendala yang dihadapi (jika ada)..."><?= isset($lppd['hambatan']) ? esc($lppd['hambatan']) : '' ?></textarea>
             </div>
 
             <!-- Saran -->
@@ -81,7 +81,7 @@
                     name="saran" 
                     rows="4" 
                     class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Berikan saran atau rekomendasi untuk perbaikan ke depan..."><?= $lppd['saran'] ?? '' ?></textarea>
+                    placeholder="Berikan saran atau rekomendasi untuk perbaikan ke depan..."><?= isset($lppd['saran']) ? esc($lppd['saran']) : '' ?></textarea>
             </div>
 
             <!-- Dokumentasi -->
@@ -97,7 +97,7 @@
                         multiple 
                         accept="image/*"
                         class="hidden"
-                        <?= !$lppd || !$lppd['is_submitted'] ? 'required' : '' ?>>
+                        <?= !isset($lppd) || !isset($lppd['is_submitted']) || !$lppd['is_submitted'] ? 'required' : '' ?>>
                     <label for="dokumentasi" class="cursor-pointer">
                         <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
                         <p class="text-gray-600 font-medium">Klik untuk upload foto atau drag & drop</p>
@@ -111,18 +111,21 @@
                 </div>
 
                 <!-- Existing Photos (if edit) -->
-                <?php if ($lppd && $lppd['dokumentasi']): ?>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                        <?php foreach (json_decode($lppd['dokumentasi']) as $foto): ?>
-                            <div class="relative group">
-                                <img src="<?= base_url('uploads/dokumentasi_kegiatan/' . $foto) ?>" alt="Dokumentasi" class="w-full h-32 object-cover rounded-lg">
-                                <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                                    <a href="<?= base_url('uploads/dokumentasi_kegiatan/' . $foto) ?>" target="_blank" class="text-white">
-                                        <i class="fas fa-eye text-2xl"></i>
-                                    </a>
+                <?php if (isset($lppd) && isset($lppd['dokumentasi']) && $lppd['dokumentasi']): ?>
+                    <div class="mt-4">
+                        <p class="text-sm font-medium text-gray-700 mb-2">Foto yang sudah diupload:</p>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <?php foreach (json_decode($lppd['dokumentasi']) as $foto): ?>
+                                <div class="relative group">
+                                    <img src="<?= base_url('uploads/dokumentasi_kegiatan/' . $foto) ?>" alt="Dokumentasi" class="w-full h-32 object-cover rounded-lg">
+                                    <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                                        <a href="<?= base_url('uploads/dokumentasi_kegiatan/' . $foto) ?>" target="_blank" class="text-white">
+                                            <i class="fas fa-eye text-2xl"></i>
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
-                        <?php endforeach; ?>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 <?php endif; ?>
             </div>
@@ -221,7 +224,7 @@ $(document).ready(function() {
                 const preview = $(`
                     <div class="relative group">
                         <img src="${e.target.result}" class="w-full h-32 object-cover rounded-lg">
-                        <button type="button" class="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity" data-index="${index}">
+                        <button type="button" class="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center" data-index="${index}">
                             <i class="fas fa-times text-xs"></i>
                         </button>
                         <div class="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
@@ -265,14 +268,14 @@ $(document).ready(function() {
         }
 
         const files = $('#dokumentasi')[0].files;
-        const existingPhotos = <?= $lppd && $lppd['dokumentasi'] ? count(json_decode($lppd['dokumentasi'])) : 0 ?>;
+        const existingPhotos = <?= isset($lppd) && isset($lppd['dokumentasi']) && $lppd['dokumentasi'] ? count(json_decode($lppd['dokumentasi'])) : 0 ?>;
         
         if (files.length === 0 && existingPhotos === 0) {
             showToast('Upload minimal 1 foto dokumentasi', 'error');
             return;
         }
 
-        saveLPPD(true);
+        saveLPPD(false);
     });
 
     function saveLPPD(isSubmit) {
@@ -284,8 +287,18 @@ $(document).ready(function() {
         const btnText = isSubmit ? 'Submitting...' : 'Saving...';
         const $btn = isSubmit ? $('#btn-submit') : $('#btn-save-draft');
         
-        $btn.prop('disabled', true).addClass('btn-loading');
-        showLoading(btnText);
+        $btn.prop('disabled', true).addClass('opacity-50');
+        
+        // Show loading using SweetAlert2
+        Swal.fire({
+            title: btnText,
+            text: 'Mohon tunggu...',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
         $.ajax({
             url: endpoint,
@@ -294,8 +307,7 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(response) {
-                hideLoading();
-                $btn.prop('disabled', false).removeClass('btn-loading');
+                $btn.prop('disabled', false).removeClass('opacity-50');
                 
                 if (response.status) {
                     Swal.fire({
@@ -307,7 +319,8 @@ $(document).ready(function() {
                         if (isSubmit) {
                             window.location.href = '<?= base_url('pegawai/sppd/detail/') ?>' + sppdId;
                         } else {
-                            showToast('LPPD berhasil disimpan', 'success');
+                            // Reload form to show saved data
+                            location.reload();
                         }
                     });
                 } else {
@@ -320,8 +333,7 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
-                hideLoading();
-                $btn.prop('disabled', false).removeClass('btn-loading');
+                $btn.prop('disabled', false).removeClass('opacity-50');
                 
                 let errorMsg = 'Terjadi kesalahan sistem';
                 if (xhr.responseJSON && xhr.responseJSON.message) {
@@ -336,6 +348,21 @@ $(document).ready(function() {
                 });
             }
         });
+    }
+
+    // Helper function for toast (if showToast not defined globally)
+    if (typeof showToast === 'undefined') {
+        window.showToast = function(message, type) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: type === 'error' ? 'error' : 'success',
+                title: message,
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        };
     }
 });
 </script>

@@ -63,7 +63,15 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<!-- Load required libraries SEBELUM script kita -->
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/locale/id.js"></script>
+
 <script>
+// Set moment locale to Indonesian
+moment.locale('id');
+
 $(document).ready(function() {
     // Initialize Flatpickr for date range
     flatpickr('#filter-periode', {
@@ -85,22 +93,26 @@ $(document).ready(function() {
                     periode: $('#filter-periode').val(),
                     tujuan: $('#filter-tujuan').val()
                 };
+            },
+            error: function(xhr, error, code) {
+                console.error('DataTables AJAX error:', error, code);
+                alert('Terjadi kesalahan saat memuat data. Silakan refresh halaman.');
             }
         },
         columns: [
             { 
-                data: 'nomor_sppd',
+                data: 'no_sppd',
                 render: function(data, type, row) {
                     return `<span class="font-mono text-sm">${data || '-'}</span>`;
                 }
             },
             { 
-                data: 'tujuan',
+                data: 'tempat_tujuan',
                 render: function(data, type, row) {
                     return `
                         <div>
-                            <div class="font-medium text-gray-900">${data}</div>
-                            <div class="text-sm text-gray-500">${row.keperluan}</div>
+                            <div class="font-medium text-gray-900">${data || '-'}</div>
+                            <div class="text-sm text-gray-500">${row.maksud_perjalanan || '-'}</div>
                         </div>
                     `;
                 }
@@ -108,10 +120,14 @@ $(document).ready(function() {
             { 
                 data: 'tanggal_formatted',
                 render: function(data, type, row) {
+                    let tanggalKembali = '';
+                    if (row.tanggal_kembali) {
+                        tanggalKembali = moment(row.tanggal_kembali).format('DD MMM YYYY');
+                    }
                     return `
                         <div class="text-sm">
-                            <div class="text-gray-900">${data}</div>
-                            <div class="text-gray-500">${row.tanggal_kembali ? 's/d ' + moment(row.tanggal_kembali).format('DD MMM YYYY') : ''}</div>
+                            <div class="text-gray-900">${data || '-'}</div>
+                            ${tanggalKembali ? `<div class="text-gray-500">s/d ${tanggalKembali}</div>` : ''}
                         </div>
                     `;
                 }
@@ -119,16 +135,18 @@ $(document).ready(function() {
             { 
                 data: 'lama_perjalanan',
                 render: function(data) {
-                    return `<span class="text-sm text-gray-900">${data} hari</span>`;
+                    return `<span class="text-sm text-gray-900">${data || 0} hari</span>`;
                 }
             },
             { 
                 data: 'tipe_badge',
-                orderable: false
+                orderable: false,
+                searchable: false
             },
             { 
                 data: 'status_badge',
-                orderable: false
+                orderable: false,
+                searchable: false
             },
             { 
                 data: 'action',
@@ -138,16 +156,36 @@ $(document).ready(function() {
         ],
         order: [[2, 'desc']],
         language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
+            "processing": "Memproses...",
+            "lengthMenu": "Tampilkan _MENU_ data",
+            "zeroRecords": "Tidak ada data yang ditemukan",
+            "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            "infoEmpty": "Menampilkan 0 sampai 0 dari 0 data",
+            "infoFiltered": "(disaring dari _MAX_ total data)",
+            "search": "Cari:",
+            "paginate": {
+                "first": "Pertama",
+                "last": "Terakhir",
+                "next": "Selanjutnya",
+                "previous": "Sebelumnya"
+            }
         },
-        responsive: true
+        responsive: true,
+        drawCallback: function(settings) {
+            console.log('DataTables loaded:', settings.json);
+        }
     });
 
-    // Filter handlers
-    $('#filter-status, #filter-periode, #filter-tujuan').on('change keyup', _.debounce(function() {
-        table.ajax.reload();
-    }, 500));
+    // Filter handlers dengan debounce
+    let filterTimeout;
+    $('#filter-status, #filter-periode, #filter-tujuan').on('change keyup', function() {
+        clearTimeout(filterTimeout);
+        filterTimeout = setTimeout(function() {
+            table.ajax.reload();
+        }, 500);
+    });
 
+    // Reset filter
     $('#btn-reset-filter').on('click', function() {
         $('#filter-status').val('');
         $('#filter-periode').val('');

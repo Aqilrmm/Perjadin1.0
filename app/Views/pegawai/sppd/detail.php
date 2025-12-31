@@ -12,7 +12,7 @@
 <div class="flex items-center justify-between mb-6">
     <div>
         <h1 class="text-2xl font-bold text-gray-900">Detail SPPD</h1>
-        <p class="text-gray-600 mt-1">Nomor: <span class="font-mono"><?= esc($sppd['nomor_sppd'] ?? '-') ?></span></p>
+        <p class="text-gray-600 mt-1">Nomor: <span class="font-mono"><?= esc($sppd['no_sppd'] ?? $sppd['nomor_sppd'] ?? '-') ?></span></p>
     </div>
     <div class="flex gap-2">
         <?php if ($sppd['status'] == 'approved'): ?>
@@ -44,7 +44,7 @@
             <i class="fas fa-exclamation-circle text-red-500 text-xl mt-0.5 mr-3"></i>
             <div>
                 <p class="font-semibold text-red-800">SPPD Ditolak</p>
-                <p class="text-sm text-red-700 mt-1"><?= esc($sppd['alasan_reject'] ?? 'Tidak ada keterangan') ?></p>
+                <p class="text-sm text-red-700 mt-1"><?= esc($sppd['catatan_kepala_dinas'] ?? $sppd['alasan_reject'] ?? 'Tidak ada keterangan') ?></p>
             </div>
         </div>
     </div>
@@ -75,16 +75,24 @@
                         <div class="mt-1"><?= get_sppd_status_badge($sppd['status']) ?></div>
                     </div>
                     <div>
+                        <label class="text-sm font-medium text-gray-500">Tempat Berangkat</label>
+                        <p class="text-gray-900 mt-1"><?= esc($sppd['tempat_berangkat'] ?? '-') ?></p>
+                    </div>
+                    <div>
                         <label class="text-sm font-medium text-gray-500">Tujuan Perjalanan</label>
-                        <p class="text-gray-900 mt-1"><?= esc($sppd['tujuan']) ?></p>
+                        <p class="text-gray-900 mt-1"><?= esc($sppd['tempat_tujuan'] ?? '-') ?></p>
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-500">Tipe Perjalanan</label>
                         <div class="mt-1"><?= get_tipe_perjalanan_badge($sppd['tipe_perjalanan']) ?></div>
                     </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Alat Angkut</label>
+                        <p class="text-gray-900 mt-1"><?= esc($sppd['alat_angkut'] ?? '-') ?></p>
+                    </div>
                     <div class="md:col-span-2">
-                        <label class="text-sm font-medium text-gray-500">Keperluan</label>
-                        <p class="text-gray-900 mt-1"><?= esc($sppd['keperluan']) ?></p>
+                        <label class="text-sm font-medium text-gray-500">Maksud Perjalanan</label>
+                        <p class="text-gray-900 mt-1"><?= esc($sppd['maksud_perjalanan'] ?? '-') ?></p>
                     </div>
                 </div>
             </div>
@@ -136,17 +144,19 @@
             <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
+                        <label class="text-sm font-medium text-gray-500">Kode Rekening</label>
+                        <p class="text-sm font-mono text-gray-900 mt-1"><?= esc($sppd['kode_rekening'] ?? '-') ?></p>
+                    </div>
+                    <div>
                         <label class="text-sm font-medium text-gray-500">Estimasi Biaya</label>
                         <p class="text-2xl font-bold text-gray-900 mt-1"><?= format_rupiah($sppd['estimasi_biaya']) ?></p>
                     </div>
-                    <div>
-                        <label class="text-sm font-medium text-gray-500">Realisasi Biaya</label>
-                        <p class="text-2xl font-bold text-green-600 mt-1">
-                            <?= $sppd['realisasi_biaya'] ? format_rupiah($sppd['realisasi_biaya']) : '-' ?>
-                        </p>
-                    </div>
                     <?php if ($sppd['realisasi_biaya']): ?>
-                        <div class="md:col-span-2">
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Realisasi Biaya</label>
+                            <p class="text-2xl font-bold text-green-600 mt-1"><?= format_rupiah($sppd['realisasi_biaya']) ?></p>
+                        </div>
+                        <div>
                             <label class="text-sm font-medium text-gray-500">Selisih</label>
                             <?php 
                                 $selisih = $sppd['estimasi_biaya'] - $sppd['realisasi_biaya'];
@@ -171,23 +181,27 @@
             </div>
             <div class="p-6">
                 <div class="space-y-3">
-                    <?php foreach ($pegawai_list as $pegawai): ?>
-                        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                            <img src="<?= base_url('uploads/photos/' . ($pegawai['foto'] ?? 'default-avatar.png')) ?>" 
-                                 alt="<?= esc($pegawai['nama']) ?>" 
-                                 class="w-12 h-12 rounded-full object-cover"
-                                 onerror="this.src='<?= base_url('assets/images/default-avatar.png') ?>'">
-                            <div class="flex-1">
-                                <p class="font-semibold text-gray-900"><?= esc($pegawai['nama']) ?></p>
-                                <p class="text-sm text-gray-600">NIP: <?= esc($pegawai['nip']) ?></p>
+                    <?php if (!empty($pegawai_list)): ?>
+                        <?php foreach ($pegawai_list as $pegawai): ?>
+                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                <img src="<?= base_url('uploads/photos/' . ($pegawai['foto'] ?? 'default-avatar.png')) ?>" 
+                                     alt="<?= esc($pegawai['nama']) ?>" 
+                                     class="w-12 h-12 rounded-full object-cover"
+                                     onerror="this.src='<?= base_url('assets/images/default-avatar.png') ?>'">
+                                <div class="flex-1">
+                                    <p class="font-semibold text-gray-900"><?= esc($pegawai['nama']) ?></p>
+                                    <p class="text-sm text-gray-600">NIP/NIK: <?= esc($pegawai['nip_nik']) ?></p>
+                                </div>
+                                <?php if ($pegawai['id'] == user_id()): ?>
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                                        Anda
+                                    </span>
+                                <?php endif; ?>
                             </div>
-                            <?php if ($pegawai['id'] == user_id()): ?>
-                                <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                                    Anda
-                                </span>
-                            <?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p class="text-gray-500 text-center py-4">Tidak ada data peserta</p>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -213,6 +227,19 @@
                         </div>
                     </div>
 
+                    <!-- Submitted -->
+                    <?php if ($sppd['submitted_at']): ?>
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-check text-green-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">SPPD Disubmit</p>
+                                <p class="text-sm text-gray-500"><?= format_tanggal($sppd['submitted_at'], true) ?></p>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
                     <!-- Approved/Rejected -->
                     <?php if ($sppd['status'] == 'approved' || $sppd['status'] == 'rejected'): ?>
                         <div class="flex items-start gap-3">
@@ -221,7 +248,7 @@
                             </div>
                             <div>
                                 <p class="font-medium text-gray-900"><?= $sppd['status'] == 'approved' ? 'Disetujui' : 'Ditolak' ?></p>
-                                <p class="text-sm text-gray-500"><?= $sppd['approved_at'] ? format_tanggal($sppd['approved_at'], true) : '-' ?></p>
+                                <p class="text-sm text-gray-500"><?= $sppd['approved_at_kepaladinas'] ?? $sppd['approved_at'] ?? '-' ?></p>
                             </div>
                         </div>
                     <?php else: ?>
@@ -236,7 +263,7 @@
                     <?php endif; ?>
 
                     <!-- LPPD -->
-                    <?php if ($lppd && $lppd['is_submitted']): ?>
+                    <?php if (isset($lppd) && $lppd && $lppd['is_submitted']): ?>
                         <div class="flex items-start gap-3">
                             <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                                 <i class="fas fa-check text-green-600"></i>
@@ -249,7 +276,7 @@
                     <?php endif; ?>
 
                     <!-- Kwitansi -->
-                    <?php if ($kwitansi && $kwitansi['is_submitted']): ?>
+                    <?php if (isset($kwitansi) && $kwitansi && $kwitansi['is_submitted']): ?>
                         <div class="flex items-start gap-3">
                             <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                                 <i class="fas fa-check text-green-600"></i>
@@ -288,13 +315,13 @@
                     </a>
                 <?php endif; ?>
                 
-                <?php if ($lppd): ?>
+                <?php if (isset($lppd) && $lppd): ?>
                     <button onclick="viewLPPD()" class="block w-full px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-center transition-colors">
                         <i class="fas fa-file-alt mr-2"></i> Lihat LPPD
                     </button>
                 <?php endif; ?>
                 
-                <?php if ($kwitansi): ?>
+                <?php if (isset($kwitansi) && $kwitansi): ?>
                     <button onclick="viewKwitansi()" class="block w-full px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-center transition-colors">
                         <i class="fas fa-receipt mr-2"></i> Lihat Kwitansi
                     </button>
@@ -307,7 +334,7 @@
 </div>
 
 <!-- LPPD Modal -->
-<?php if ($lppd): ?>
+<?php if (isset($lppd) && $lppd): ?>
 <div id="lppd-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
     <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
@@ -322,19 +349,19 @@
                     <label class="text-sm font-medium text-gray-500">Hasil Kegiatan</label>
                     <p class="text-gray-900 mt-2 whitespace-pre-line"><?= esc($lppd['hasil_kegiatan']) ?></p>
                 </div>
-                <?php if ($lppd['hambatan']): ?>
+                <?php if (!empty($lppd['hambatan'])): ?>
                     <div>
                         <label class="text-sm font-medium text-gray-500">Hambatan</label>
                         <p class="text-gray-900 mt-2 whitespace-pre-line"><?= esc($lppd['hambatan']) ?></p>
                     </div>
                 <?php endif; ?>
-                <?php if ($lppd['saran']): ?>
+                <?php if (!empty($lppd['saran'])): ?>
                     <div>
                         <label class="text-sm font-medium text-gray-500">Saran</label>
                         <p class="text-gray-900 mt-2 whitespace-pre-line"><?= esc($lppd['saran']) ?></p>
                     </div>
                 <?php endif; ?>
-                <?php if ($lppd['dokumentasi']): ?>
+                <?php if (!empty($lppd['dokumentasi'])): ?>
                     <div>
                         <label class="text-sm font-medium text-gray-500">Dokumentasi</label>
                         <div class="grid grid-cols-3 gap-3 mt-2">
@@ -353,7 +380,7 @@
 <?php endif; ?>
 
 <!-- Kwitansi Modal -->
-<?php if ($kwitansi): ?>
+<?php if (isset($kwitansi) && $kwitansi): ?>
 <div id="kwitansi-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
     <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
@@ -365,31 +392,31 @@
         <div class="p-6">
             <div class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
-                    <?php if ($kwitansi['biaya_perjalanan']): ?>
+                    <?php if (!empty($kwitansi['biaya_perjalanan'])): ?>
                         <div>
                             <label class="text-sm font-medium text-gray-500">Biaya Perjalanan</label>
                             <p class="text-lg font-semibold text-gray-900 mt-1"><?= format_rupiah($kwitansi['biaya_perjalanan']) ?></p>
                         </div>
                     <?php endif; ?>
-                    <?php if ($kwitansi['biaya_lumsum']): ?>
+                    <?php if (!empty($kwitansi['biaya_lumsum'])): ?>
                         <div>
                             <label class="text-sm font-medium text-gray-500">Biaya Lumsum</label>
                             <p class="text-lg font-semibold text-gray-900 mt-1"><?= format_rupiah($kwitansi['biaya_lumsum']) ?></p>
                         </div>
                     <?php endif; ?>
-                    <?php if ($kwitansi['biaya_penginapan']): ?>
+                    <?php if (!empty($kwitansi['biaya_penginapan'])): ?>
                         <div>
                             <label class="text-sm font-medium text-gray-500">Biaya Penginapan</label>
                             <p class="text-lg font-semibold text-gray-900 mt-1"><?= format_rupiah($kwitansi['biaya_penginapan']) ?></p>
                         </div>
                     <?php endif; ?>
-                    <?php if ($kwitansi['biaya_taxi']): ?>
+                    <?php if (!empty($kwitansi['biaya_taxi'])): ?>
                         <div>
                             <label class="text-sm font-medium text-gray-500">Biaya Taxi</label>
                             <p class="text-lg font-semibold text-gray-900 mt-1"><?= format_rupiah($kwitansi['biaya_taxi']) ?></p>
                         </div>
                     <?php endif; ?>
-                    <?php if ($kwitansi['biaya_tiket']): ?>
+                    <?php if (!empty($kwitansi['biaya_tiket'])): ?>
                         <div>
                             <label class="text-sm font-medium text-gray-500">Biaya Tiket</label>
                             <p class="text-lg font-semibold text-gray-900 mt-1"><?= format_rupiah($kwitansi['biaya_tiket']) ?></p>
@@ -425,5 +452,13 @@ function viewKwitansi() {
 function closeKwitansi() {
     document.getElementById('kwitansi-modal').classList.add('hidden');
 }
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-backdrop')) {
+        closeLPPD();
+        closeKwitansi();
+    }
+});
 </script>
 <?= $this->endSection() ?>

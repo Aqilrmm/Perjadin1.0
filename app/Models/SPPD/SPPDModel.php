@@ -15,7 +15,7 @@ class SPPDModel extends BaseModel
         'lama_perjalanan', 'penanggung_jawab', 'estimasi_biaya', 'realisasi_biaya',
         'status', 'catatan_kepala_dinas', 'catatan_keuangan', 'approved_by_kepaladinas',
         'approved_at_kepaladinas', 'verified_by_keuangan', 'verified_at_keuangan',
-        'submitted_at', 'created_by'
+        'submitted_at', 'created_by','file_nota_dinas', 'file_spd', 'kode_rekening'
     ];
 
     protected $useTimestamps = true;
@@ -28,6 +28,7 @@ class SPPDModel extends BaseModel
         'tipe_perjalanan' => 'required',
         'maksud_perjalanan' => 'required|min_length[20]',
         //'dasar_surat' => 'required',
+
         'tempat_berangkat' => 'required',
         'tempat_tujuan' => 'required',
         'tanggal_berangkat' => 'required|valid_date',

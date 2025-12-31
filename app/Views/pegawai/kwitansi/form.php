@@ -28,7 +28,7 @@
                     <p class="font-semibold text-blue-800">Informasi SPPD</p>
                     <div class="text-sm text-blue-700 mt-2 grid grid-cols-2 gap-2">
                         <div><strong>Tujuan:</strong> <?= esc($sppd['tujuan']) ?></div>
-                        <div><strong>Tipe:</strong> <?= get_tipe_perjalanan_text($sppd['tipe_perjalanan']) ?></div>
+                        <div><strong>Tipe:</strong> <?= esc($sppd['tipe_perjalanan']) ?></div>
                         <div><strong>Lama:</strong> <?= $sppd['lama_perjalanan'] ?> hari</div>
                         <div><strong>Estimasi:</strong> <?= format_rupiah($sppd['estimasi_biaya']) ?></div>
                     </div>
